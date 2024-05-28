@@ -1,0 +1,43 @@
+
+
+
+; 
+; PROBLEM:
+; 
+; Consider designing the system for controlling a New Year's Eve
+; display. Design a data definition to represent the current state 
+; of the countdown, which falls into one of three categories: 
+; 
+;  - not yet started
+;  - from 10 to 1 seconds before midnight
+;  - complete (Happy New Year!)
+; 
+
+
+;; countdown is one of:
+;;  - false
+;;  - Natural[1,10]
+;;  - "complate"
+;; interp.
+;; false         means countdown has not yet started
+;; Natural[1,10] means countdown is running and how many seconds left
+;; "complete"    means countdown is over
+
+(define cd1 false)      ; not yet started
+(define cd2 10)          ; just started running
+(define cd3 5)          ; midway 
+(define cd4 1)          ; almost over
+(define cd5 "complete" ); countdown is over
+
+(define (fn-for-Countdown cd)
+  (cond [ (false? cd) (...)]
+        [ (and (number? cd)(<= 1 cd)(<= cd 10)) (... cd)]
+        [ else (...)])
+  )
+
+;; template rules used :
+;; - one of : 3 cases
+;; - atomic distinct : false
+;; - atomin non-distinct : interval
+;; - atomic distinct : "complate"
+
