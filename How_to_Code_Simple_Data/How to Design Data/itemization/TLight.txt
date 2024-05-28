@@ -1,0 +1,28 @@
+
+;; Data definitions:
+
+;; TLight is one of:
+;; - false
+;; - "red"
+;; - "yellow"
+;; - "green"
+;; interp. false means the light is disabled, otherwise the color of the light
+
+(define TL1 false)
+(define TL2 "red")
+
+(define (fn-for-TLight TL)
+  (cond [(false? TL)         (...)]
+        [(string=? TL "red") (...)]
+        [(string=? TL "yellow") (...)]
+        [else (...)]
+
+))
+
+
+;; templates rules used:
+;; one of : 4 cases
+;; - atomic distinct: false
+;; - atomic distinct: "red"
+;; - atomic distinct: "yellow"
+;; - atomic distinct: "green"
