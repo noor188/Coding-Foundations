@@ -1,0 +1,19 @@
+; Design a function called seat-guaranteed?
+; that consumes a reservation and returns true if the reservation
+; guarantees a seat for dinner in the restaurant.
+
+
+;; Reservation -> Boolean
+;; Produce True if the Reservation guarantees a seat for dinner. Reservation a value [1,100]
+(check-expect (seat-guaranteed? 50) true)
+(check-expect (seat-guaranteed? "standby") false)
+
+
+;(define (seat-guaranteed? r) true); stub
+
+;; <use template from Reservation>
+
+(define (seat-guaranteed? r)
+  (cond [(number? r) true]
+        [else false]))
+
