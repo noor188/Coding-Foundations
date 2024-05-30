@@ -1,0 +1,24 @@
+ 
+; PROBLEM:
+; 
+; DESIGN function that consumes a string and determines whether its length is
+; less than 5.  Follow the HtDF recipe and leave behind commented out versions 
+; of the stub and template.
+; 
+
+
+;; String -> String
+;; True if str length is less than 5
+(check-expect (less-than-five? "Noor")         true)
+(check-expect (less-than-five? "happy")        false)
+(check-expect (less-than-five? "complicated")  false)
+
+;(define (less-than-five? str) true) ; stub
+
+;; <template used from Atomic non-distinct>
+#; 
+(define (fn-for-str str)
+        (... str))
+
+(define (less-than-five? str)
+        (> 5 (string-length str) ))
