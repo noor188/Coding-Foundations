@@ -24,62 +24,55 @@
 ; 
 
 
-
 (require 2htdp/image)
 (require 2htdp/universe)
 
-;; A cat that walks from left to right accross the screen
+;; Cat moves across the screen from left to right
 
 ;; =================
 ;; Constants:
-
 (define WIDTH  600)
 (define HEIGHT 400)
-(define CTR-Y  (/ HEIGHT 2))
-(define MTS (empty-scene WIDTH HEIGHT "midnight blue"))
-(define CAT-IMG .  )
+(define CTR-Y (/ HEIGHT 2))
+(define MTS (empty-scene WIDTH HEIGHT))
 
+(define CAT-IMG .)
 
 
 ;; =================
 ;; Data definitions:
 
 ;; CatX is Number
-;; interp. x position of the cat in screen coordinates
-
-(define CX1 0)              ; left edge
-(define CX2 (/ WIDTH 2))    ; middle
-(define CX3 WIDTH)          ; right edge
-
+;; interp. x postion of cat in screen coordinates
+(define CX1 0)           ; left edge
+(define CX2 (/ WIDTH 2)) ; middle
+(define CX3 WIDTH)       ; right edge
 #;
-(define (fn-for-cat-x CX)
+(define (fn-for-catx CX)
   (... CX))
 
-;; Template rules used:
+;; Template Rules used:
 ;; - Atomic Non-Distinct: Number
-
 
 ;; =================
 ;; Functions:
 
-;; CatX -> CatX
-;; start the world with ...
+;; CatX -> Images
+;; on every tick it calculates next CatX position and renders the cat image onto that postion
 ;; 
 (define (main CX)
-  (big-bang CX                   ; CatX
-            (on-tick   tock)     ; CatX -> CatX
-            (to-draw   render)   ; CatX -> Image
-            (stop-when ...)      ; CatX -> Boolean
-            (on-mouse  ...)      ; CatX Integer Integer MouseEvent -> CatX
-            (on-key    ...)))    ; CatX KeyEvent -> CatX
+  (big-bang CX                      ; CatX
+            (on-tick   advance-cat) ; CatX -> CatX
+            (to-draw   render)))    ; CatX -> Image
+           
 
 ;; CatX -> CatX
-;; produce the next ...
+;; produce the next CatX postion, by advancing it 1 pixel to right
 ;; !!!
-(define (tock CX) ...)
+(define (advance-cat CX) 0)
 
 
 ;; CatX -> Image
-;; render ... 
+;; render the CAT-IMG at the appropriate place on MTS 
 ;; !!!
-(define (render CX) ...)
+(define (render Cx) MTS)
