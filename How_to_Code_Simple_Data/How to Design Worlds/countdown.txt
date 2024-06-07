@@ -1,0 +1,65 @@
+(require 2htdp/image)
+(require 2htdp/universe)
+
+;; A countdown from 10 to 0 
+
+;; =================
+;; Constants:
+(define HEIGHT 100)
+(define WIDTH  100)
+(define MTS (empty-scene WIDTH HEIGHT))
+(define CTR-Y (/ HEIGHT 2))
+(define CTR-X (/ WIDTH  2))
+(define TEXT-SIZE 24)
+(define TEXT-COLOUR "red")
+
+
+;; =================
+;; Data definitions:
+
+;; CountDown is Intager[0,10]
+;; interp. the number in countdown
+(define cd1 10) ; start countdown
+(define cd2 5)  ; mid way
+(define cd3 0)  ; end countdown
+#;
+(define (fn-for-Count-Down cd)
+  (... cd))
+
+;; template rules used:
+;; - atomic non-distinct
+
+;; =================
+;; Functions:
+
+;; CountDown -> CountDown
+;; start the world with initial state cd, for example: (main 10) 
+;; 
+(define (main CountDown)
+  (big-bang CountDown                   ; CountDown
+            (on-tick   next-number)     ; CountDown -> CountDown
+            (to-draw   render) ))       ; CountDown -> Image
+
+
+;; CountDown -> CountDown
+;; produce the next number in the countdown by subtracting 1, if the countdown is 0 it remains at 0
+(check-expect (next-number 10) (- 10 1)) ; countdown positive
+(check-expect (next-number 0)  0)        ; countdown zero
+;(define (next-number cd) 0); stub
+
+;<use template from
+(define (next-number cd)
+  (if (= cd 0)      
+      0
+      (- cd 1)))
+
+;; CountDown -> Image
+;; render the next number into the MTS 
+(check-expect (render 10) (place-image(text(number->string 10) 24 "red") CTR-X CTR-Y MTS))
+(check-expect (render 0) (place-image (text (number->string 0) 24 "red") CTR-X CTR-Y MTS))
+;(define (render cd) MTS); stub
+
+; <use template from CountDown>
+(define (render cd)
+  (place-image(text(number->string cd) TEXT-SIZE TEXT-COLOUR) CTR-X CTR-Y MTS))
+
