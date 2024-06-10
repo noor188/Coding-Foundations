@@ -38,8 +38,9 @@
 (define (main CountDown)
   (big-bang CountDown                   ; CountDown
             (on-tick   next-number)     ; CountDown -> CountDown
-            (to-draw   render) ))       ; CountDown -> Image
-
+            (to-draw   render)          ; CountDown -> Image
+            (on-key    handle-key)      ; CountDown KeyEvent -> CountDown
+            (on-mouse  handle-mouse) )) ; CountDown Integer Integer MouseEvent -> CountDown
 
 ;; CountDown -> CountDown
 ;; produce the next number in the countdown by subtracting 1, if the countdown is 0 it remains at 0
@@ -62,4 +63,36 @@
 ; <use template from CountDown>
 (define (render cd)
   (place-image(text(number->string cd) TEXT-SIZE TEXT-COLOUR) CTR-X CTR-Y MTS))
+
+
+;; CountDown KeyEvent -> CountDown
+;; Increase CountDown by 10 whenever the left arrow key is pressed 
+(check-expect (handle-key 10 "left") (+ 10 10))
+(check-expect (handle-key 10 " ")    10)
+(check-expect (handle-key  0 "left") (+  0 10))
+(check-expect (handle-key  0 " ") 0)
+
+;(define (handle-key CountDown ke) 0); stub
+
+(define (handle-key CountDown ke)
+  (cond [(key=? ke "left") (+ CountDown 10)]
+        [else CountDown]))
+
+
+;; CountDown Integer Integer MouseEvent -> CountDown
+;; End countdown (zero) when the mouse is clicked
+(check-expect (handle-mouse 10 10 10 "button-down" )  0)
+(check-expect (handle-mouse 10 10 10 "drag" )        10)
+(check-expect (handle-mouse  5 10 10 "button-down" )  0)
+(check-expect (handle-mouse  5 10 10 "drag" )         5)
+(check-expect (handle-mouse  0 10 10 "button-down" )  0)
+(check-expect (handle-mouse  0 10 10 "drag" )         0)
+
+;(define (handle-mouse CountDown x y me) 0); stub
+
+(define (handle-mouse CountDown x y me)
+  (cond [(mouse=? me "button-down") 0]
+        [else
+         CountDown]))
+
 
