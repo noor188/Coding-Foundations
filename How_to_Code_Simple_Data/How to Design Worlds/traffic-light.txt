@@ -1,0 +1,148 @@
+(require 2htdp/image)
+(require 2htdp/universe)
+
+;; traffic-light-starter.rkt
+
+; 
+; PROBLEM:
+; 
+; Design an animation of a traffic light. 
+; 
+; Your program should show a traffic light that is red, then green, 
+; then yellow, then red etc. For this program, your changing world 
+; state data definition should be an enumeration.
+; 
+; Here is what your program might look like if the initial world 
+; state was the red traffic light:
+; .
+; Next:
+; .
+; Next:
+; .
+; Next is red, and so on.
+; 
+; To make your lights change at a reasonable speed, you can use the 
+; rate option to on-tick. If you say, for example, (on-tick next-color 1) 
+; then big-bang will wait 1 second between calls to next-color.
+; 
+; Remember to follow the HtDW recipe! Be sure to do a proper domain 
+; analysis before starting to work on the code file.
+; 
+; Note: If you want to design a slightly simpler version of the program,
+; you can modify it to display a single circle that changes color, rather
+; than three stacked circles. 
+; 
+
+
+
+(require 2htdp/image)
+(require 2htdp/universe)
+
+;; Animation of a traffic light
+
+;; =================
+;; Constants:
+(define RADIUS  20) ; for each light
+(define SPACING  6) ; 
+(define BACKGROUND (rectangle (+ (* SPACING 2)(* RADIUS 2))
+                              (+ (* SPACING 4)(* RADIUS 6))
+                              "solid"
+                              "black"
+                              ))
+(define SPACE (square SPACING "solid" "black"))
+
+(define RON
+  (overlay (above SPACE
+                  (circle RADIUS "solid" "red")
+                  SPACE
+                  (circle RADIUS "outline" "yellow")
+                  SPACE
+                  (circle RADIUS "outline" "green")
+                  SPACE
+            )
+           BACKGROUND))
+
+(define YON
+  (overlay (above SPACE
+                  (circle RADIUS "outline" "red")
+                  SPACE
+                  (circle RADIUS "solid" "yellow")
+                  SPACE
+                  (circle RADIUS "outline" "green")
+                  SPACE
+            )
+           BACKGROUND))
+
+(define GON
+  (overlay (above SPACE
+                  (circle RADIUS "outline" "red")
+                  SPACE
+                  (circle RADIUS "outline" "yellow")
+                  SPACE
+                  (circle RADIUS "solid" "green")
+                  SPACE
+            )
+           BACKGROUND))
+
+
+
+
+;; =================
+;; Data definitions:
+
+;; TrafficLight is one of:
+;; - "red"
+;; - "green"
+;; - "yellow"
+;; interp. the color of a traffic light
+#;
+(define (fn-for-trafic-light tl)
+  (cond [(string=? tl "red")     (...)]
+        [(string=? tl "green")   (...)]
+        [(string=? tl "yellow")  (...)]))
+
+;; Template rules used:
+;; - one of: 3 cases
+;; - atomic distinct: "red"
+;; - atomic distinct: "green"
+;; - atomic distinct: "yellow"
+
+;; =================
+;; Functions:
+
+;; TrafficLight -> TrafficLight
+;; start the world with (main "red")
+;; 
+(define (main tl)
+  (big-bang tl                    ; TrafficLight
+            (on-tick   next-color 3); TrafficLight -> TrafficLight
+            (to-draw   render)))  ; TrafficLight -> Image
+            
+
+;; TrafficLight -> TrafficLight
+;; produce the next color in a traffic light
+(check-expect (next-color "red")    "green")
+(check-expect (next-color "green")  "yellow")
+(check-expect (next-color "yellow") "red")
+
+;(define (next-color tl) " "); stub
+
+(define (next-color tl)
+  (cond [(string=? tl "red")     "green"]
+        [(string=? tl "green")   "yellow"]
+        [(string=? tl "yellow")  "red"]))
+
+
+;; TrafficLight -> Image
+;; render a color into the TRAFFICLIGHT 
+(check-expect (render "red")   RON)
+(check-expect (render "green") GON)
+(check-expect (render "yellow")YON)
+
+;(define (render tl) BACKGROUND) ; stub
+
+(define (render tl)
+  (cond [(string=? tl "red")     RON]
+        [(string=? tl "green")   GON]
+        [(string=? tl "yellow")  YON]))
+
