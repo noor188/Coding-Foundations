@@ -1,0 +1,26 @@
+
+;; compound-starter.rkt
+
+; 
+; PROBLEM:
+; 
+; Design a data definition to represent hockey players, including both 
+; their first and last names.
+; 
+
+
+(define-struct player (fn ln))
+;; Player is (make-player String String)
+;; interp. (make-player String String) is a hockey player with
+;;          fn is the first name
+;;          ln is the last  name 
+
+(define P1 (make-player "john" "smith"))
+(define P2 (make-player "wayne" "Gretzky"))
+
+(define (fn-for-player p)
+  (...(player-fn p)   ; String
+      (player-ln p))) ; String
+
+;; template rules used:
+;; - Compound: 2 fields
