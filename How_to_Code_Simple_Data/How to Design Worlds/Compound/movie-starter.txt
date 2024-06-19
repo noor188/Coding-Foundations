@@ -1,0 +1,68 @@
+
+;; movie-starter.rkt
+
+;; =================
+;; Data definitions:
+
+; 
+; PROBLEM A:
+; 
+; Design a data definition to represent a movie, including  
+; title, budget, and year released.
+; 
+; To help you to create some examples, find some interesting movie facts below: 
+; "Titanic" - budget: 200000000 released: 1997
+; "Avatar" - budget: 237000000 released: 2009
+; "The Avengers" - budget: 220000000 released: 2012
+; 
+; However, feel free to resarch more on your own!
+; 
+
+
+(define-struct movie (tl bd yr))
+;; Movie is (make-movie String Natural Natural)
+;; interp. (make-movie tl bd yr) is a movie with
+;;                  tl is the title
+;;                  bd is the budget
+;;                  yr is the year released
+
+(define M1 (make-movie "Titanic"       200000000 1997))
+(define M2 (make-movie "Avatar"        237000000 2009))
+(define M3 (make-movie "The Avengers"  220000000 2012))
+#;
+(define (fn-for-movie m)
+  (... (movie-tl m) (movie-bd m) (movie-yr m)))
+
+;; Template rules used:
+;; - Compound: 3 fields
+
+;; =================
+;; Functions:
+
+; 
+; PROBLEM B:
+; 
+; You have a list of movies you want to watch, but you like to watch your 
+; rentals in chronological order. Design a function that consumes two movies 
+; and produces the title of the most recently released movie.
+; 
+; Note that the rule for templating a function that consumes two compound data 
+; parameters is for the template to include all the selectors for both 
+; parameters.
+; 
+
+
+;; Movie Movie -> String
+;; Produce the most recent released movie, if equal produce the first passed movie
+(check-expect (order-movie M1 M2) (movie-tl M2))
+(check-expect (order-movie M2 M3) (movie-tl M3))
+(check-expect (order-movie M1 M1) (movie-tl M1))
+
+;(define (order-movie m1 m2) " "); Stub
+
+(define (order-movie m1 m2)
+  (if (>= (movie-yr m1) (movie-yr m2))
+       (movie-tl m1)
+       (movie-tl m2)))
+
+
