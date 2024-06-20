@@ -1,0 +1,89 @@
+
+; 
+; PROBLEM:
+; 
+; As we learned in the cat world programs, cats have a mind of their own. When they 
+; reach the edge they just keep walking out of the window.
+; 
+; Cows on the other hand are docile creatures. They stay inside the fence, walking
+; back and forth nicely.
+; 
+; Design a world program with the following behaviour:
+;    - A cow walks back and forth across the screen.
+;    - When it gets to an edge it changes direction and goes back the other way
+;    - When you start the program it should be possible to control how fast a
+;      walker your cow is.
+;    - Pressing space makes it change direction right away.
+;    
+; To help you here are two pictures of the right and left sides of a lovely cow that 
+; was raised for us at Brown University.
+; 
+; .     .
+; 
+; Once your program works here is something you can try for fun. If you rotate the
+; images of the cow slightly, and you vary the image you use as the cow moves, you
+; can make it appear as if the cow is waddling as it walks across the screen.
+; 
+; Also, to make it look better, arrange for the cow to change direction when its
+; nose hits the edge of the window, not the center of its body.
+; 
+
+
+
+(require 2htdp/image)
+(require 2htdp/universe)
+
+;; Animation of a cow walking back and forth across the screen
+
+;; =================
+;; Constants:
+(define HEIGHT 400)
+(define WIDTH  600)
+(define CTR-Y  (/ HEIGHT 2))
+(define MTS (empty-scene WIDTH HEIGHT))
+(define SPEED 4)
+(define COW-IMG-RIGHT .  )
+(define COW-IMG-LEFT . ) 
+
+
+;; =================
+;; Data definitions:
+(define-struct cow (CowX dx))
+;; Cow is (make-cow Natural[0,WIDTH] Integer)
+;; interp. a cow with a
+;;              CowX: x coordinate
+;;              dx:   velocity 
+
+(define c1 (make-cow 0            40))
+(define c2 (make-cow WIDTH       -90))
+(define c3 (make-cow (/ WIDTH 2) -90))
+
+(define (fn-for-cow c)
+  (... (cow-CowX c) ; Integer
+       (cow-dx c))) ; Number
+
+;; Template rules used:
+;; -Compound : 2 fields
+
+;; =================
+;; Functions:
+
+;; Cow -> Cow
+;; start the world with ...
+;; 
+(define (main c)
+  (big-bang c                   ; Cow
+            (on-tick   advance-cow)     ; Cow -> Cow
+            (to-draw   render-cow)   ; Cow -> Image           
+            (on-key    ...)))    ; Cow KeyEvent -> Cow
+
+;; Cow -> Cow
+;; 
+;; !!!
+(define (advance-cow c) ...)
+
+
+;; Cow -> Image
+;; render COW-IMG at (cow-CowX, CTR-Y) position on the MTS coordinate
+;; !!!
+(define (render-cow c) ...)
