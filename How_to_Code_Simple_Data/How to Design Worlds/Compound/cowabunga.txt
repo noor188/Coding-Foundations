@@ -33,7 +33,7 @@
 (require 2htdp/image)
 (require 2htdp/universe)
 
-;; Animation of a cow walking back and forth across the screen
+;; Animation of a walking cow back and fourth accross the screen
 
 ;; =================
 ;; Constants:
@@ -41,29 +41,29 @@
 (define WIDTH  400)
 (define CTR-Y  (/ HEIGHT 2))
 (define MTS (empty-scene WIDTH HEIGHT))
-(define SPEED 4)
-(define RCOW .  )
-(define LCOW . ) 
-
+(define RCOW .)
+(define LCOW  .)
+(define ANGLE 20)
 
 ;; =================
 ;; Data definitions:
-(define-struct cow (CowX dx))
-;; Cow is (make-cow Natural[0,WIDTH] Integer)
-;; interp. (make-cow CowX dx) a cow with a
-;;              CowX: x coordinate, center of the cow, in screen coordinates (pixels)
-;;              dx:   velocity, in pixels per tick 
 
-(define C1 (make-cow 0            40)); at 0     moving left -> right
-(define C2 (make-cow WIDTH       -90)); at WIDTH moving right -> left
-(define C3 (make-cow (/ WIDTH 2) -90))
+(define-struct cow (x dx angle))
+;; Cow is (make-cow Natural[0,WIDTH] Integer ANGLE)
+;; interp. (make-cow x dx) is a cow with:
+;;                 x: cow x position on the MTS coordinate
+;;                dx: velocity, pixel per tick
+;;             angle: cow image rotation angle
+
+(define CX1 (make-cow 0            3    ANGLE )) ; start
+(define CX2 (make-cow (/ WIDTH 2) -3 (- ANGLE))) ; middle
+(define CX3 (make-cow WIDTH        7    ANGLE )) ; edge
 #;
-(define (fn-for-cow c)
-  (... (cow-CowX c) ; Natural[0,WIDTH]
-       (cow-dx c))) ; Number
+(define (fn-for-cowx cx)
+  (...(cow-x cx)(cow-dx cx) (cow-x angle)))
 
-;; Template rules used:
-;; -Compound : 2 fields
+;; template rules used:
+;; Compound: 3 fields
 
 ;; =================
 ;; Functions:
@@ -71,70 +71,73 @@
 ;; Cow -> Cow
 ;; start the world with ...
 ;; 
-(define (main c)
-  (big-bang c                           ; Cow
-            (on-tick   advance-cow)     ; Cow -> Cow
-            (to-draw   render-cow)      ; Cow -> Image           
-            (on-key    key-direction))) ; Cow KeyEvent -> Cow
+(define (main cx)
+  (big-bang cx                        ; Cow
+            (on-tick   next-cow)      ; Cow -> Cow
+            (to-draw   render-cow)    ; Cow -> Image           
+            (on-key    key-handler))) ; Cow KeyEvent -> Cow
 
 ;; Cow -> Cow
-;; Advances (cow-CowX c) by (Cow-dx c); bounce off edge
-(check-expect (advance-cow (make-cow 20  3)) (make-cow (+ 20 3)  3)) ; middle
-(check-expect (advance-cow (make-cow 20 -3)) (make-cow (- 20 3) -3))
+;; produce the next cow x postion by adding dx to x, if passed the edge set x to (0 or WIDTH) and reverse dx
+(check-expect (next-cow (make-cow (/ WIDTH 2) 3 ANGLE)) (make-cow (+ (/ WIDTH 2)  3)  3 (choose-angle ANGLE))) ; middle
+(check-expect (next-cow (make-cow (/ WIDTH 2)-3 ANGLE)) (make-cow (+ (/ WIDTH 2) -3) -3 (choose-angle ANGLE))) ; middle
 
-(check-expect (advance-cow (make-cow (- WIDTH 3) 3)) (make-cow WIDTH 3)) ; reaches edge 
-(check-expect (advance-cow (make-cow 3          -3)) (make-cow 0    -3))
+(check-expect (next-cow (make-cow 3 -3 ANGLE))         (make-cow 0    -3 (choose-angle ANGLE))) ; edge
+(check-expect (next-cow (make-cow (- WIDTH 3)3 ANGLE)) (make-cow WIDTH 3 (choose-angle ANGLE))) ; edge
 
-(check-expect (advance-cow (make-cow (- WIDTH 2) 3)) (make-cow WIDTH -3)) ; tries to pass edge 
-(check-expect (advance-cow (make-cow 2          -3)) (make-cow 0      3))
-;(define (advance-cow c) C1); stub
+(check-expect (next-cow (make-cow 3 -4 ANGLE))         (make-cow 0      4 (choose-angle ANGLE))) ; try to pass the edge
+(check-expect (next-cow (make-cow (- WIDTH 3)4 ANGLE)) (make-cow WIDTH -4 (choose-angle ANGLE))) ; try to pass the edge
 
-;<template used from COW>
-(define (advance-cow c)
-  ( cond [(> (+ (cow-CowX c)(cow-dx c)) WIDTH) (make-cow WIDTH (-(cow-dx c)))] ; leave right edge      
-         [(< (+ (cow-CowX c)(cow-dx c))     0) (make-cow 0     (-(cow-dx c)))] ; left left edge      
-         [else
-          (make-cow (+ (cow-CowX c)(cow-dx c))
-                    (cow-dx c))]                                               ; keep going 
-  ))  
+;(define (next-cow cx) CX1) ;stub
 
+;<template from Cow>
+(define (next-cow cx)
+  (cond [(> (+ (cow-x cx)(cow-dx cx)) WIDTH) (make-cow WIDTH (-(cow-dx cx)) (choose-angle (cow-angle cx)))]
+        [(< (+ (cow-x cx)(cow-dx cx))     0) (make-cow 0     (-(cow-dx cx)) (choose-angle (cow-angle cx)))]
+        [else                                (make-cow (+ (cow-x cx)(cow-dx cx))(cow-dx cx) (choose-angle (cow-angle cx)))]
+   ))
 
+;; Number -> Number
+;; reflects the input sign
+(check-expect (choose-angle    ANGLE)  (- ANGLE))
+(check-expect (choose-angle (- ANGLE))    ANGLE)
+;(define (choose-angle ang) ANGLE); stub
+
+(define (choose-angle ang)
+  (- ang))
+ 
 ;; Cow -> Image
-;; render the correct image of the cow at its x-position on MTS
-(check-expect (render-cow (make-cow 20  3))
-              (place-image RCOW 20 CTR-Y MTS))
-(check-expect (render-cow (make-cow (/ WIDTH 2)  -3))
-              (place-image LCOW (/ WIDTH 2) CTR-Y MTS))
-;(define (render-cow c) MTS); stub
+;; render cow image into the MTS
+(check-expect (render-cow (make-cow 3 -3 ANGLE)) (place-image (choose-image (make-cow 3 -3 ANGLE)) 3 CTR-Y MTS)) ; dx < 0
+(check-expect (render-cow (make-cow 3  3 ANGLE)) (place-image (choose-image (make-cow 3  3 ANGLE)) 3 CTR-Y MTS)) ; dx > 0
+;(define (render-cow cx) LCOW); stub
 
-;<template  used from Cow>
-(define (render-cow c)  
-      (place-image (choose-image c) (cow-CowX c) CTR-Y MTS))
+;<template from Cow>
+(define (render-cow cx)
+  (place-image (choose-image cx) (cow-x cx) CTR-Y MTS)
+   )
 
-;; Cow -> Image
-;; return LCOW if dx < 0 else RCOW; LCOW if dx = 0
-(check-expect (choose-image (make-cow 20            3)) RCOW)
-(check-expect (choose-image (make-cow (/ WIDTH 2)  -3)) LCOW)
-(check-expect (choose-image (make-cow (/ WIDTH 2)  0))  LCOW)
+;; Cow -> Image  
+;; produce the appropriate cow image depending on dx and rotates it by (cow-angle cx), if dx = 0 return RCOW
+(check-expect (choose-image (make-cow 3 -3 ANGLE)) (rotate ANGLE LCOW))
+(check-expect (choose-image (make-cow 3  3 ANGLE)) (rotate ANGLE RCOW))
 ;(define (choose-image c) LCOW); stub
 
-;<template used from COW>
-(define (choose-image c)
-  (if (> (cow-dx c) 0)
-      RCOW
-      LCOW
-     ))
+;<template used from cow>
+(define (choose-image cx)
+  (if (< (cow-dx cx) 0)
+      (rotate (cow-angle cx) LCOW)
+      (rotate (cow-angle cx) RCOW)))
 
 
 ;; Cow KeyEvent -> Cow
-;; Change the cow image direction when the space key is pressed
-(check-expect (key-direction (make-cow 20   3) " ")    (make-cow 20  -3)) ; right -> left
-(check-expect (key-direction (make-cow 20  -3) " ")    (make-cow 20   3)) ; left  -> right 
-(check-expect (key-direction (make-cow 20  -3) "left") (make-cow 20  -3)) ; different key, no change
-;(define (key-direction c ke) C1); stub
+;; changes cow direction dx
+(check-expect (key-handler (make-cow 3 -3 ANGLE) " ")    (make-cow 3 3  ANGLE))
+(check-expect (key-handler (make-cow 3 -3 ANGLE ) "left")(make-cow 3 -3 ANGLE))
+;(define (key-handler cx ke) CX1); stub
 
-(define (key-direction c ke)
+;<template used from cow>
+(define (key-handler cx ke)
   (if (string=? " " ke)
-      (make-cow (cow-CowX c) (-(cow-dx c)))
-      c
-  ))
+      (make-cow (cow-x cx)(-(cow-dx cx)) (cow-angle cx))
+      cx))
