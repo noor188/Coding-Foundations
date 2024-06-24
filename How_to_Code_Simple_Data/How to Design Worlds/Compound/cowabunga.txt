@@ -37,29 +37,29 @@
 
 ;; =================
 ;; Constants:
-(define HEIGHT 400)
-(define WIDTH  600)
+(define HEIGHT 200)
+(define WIDTH  400)
 (define CTR-Y  (/ HEIGHT 2))
 (define MTS (empty-scene WIDTH HEIGHT))
 (define SPEED 4)
-(define COW-IMG-RIGHT .  )
-(define COW-IMG-LEFT . ) 
+(define RCOW .  )
+(define LCOW . ) 
 
 
 ;; =================
 ;; Data definitions:
 (define-struct cow (CowX dx))
 ;; Cow is (make-cow Natural[0,WIDTH] Integer)
-;; interp. a cow with a
-;;              CowX: x coordinate
-;;              dx:   velocity 
+;; interp. (make-cow CowX dx) a cow with a
+;;              CowX: x coordinate, center of the cow, in screen coordinates (pixels)
+;;              dx:   velocity, in pixels per tick 
 
-(define c1 (make-cow 0            40))
-(define c2 (make-cow WIDTH       -90))
-(define c3 (make-cow (/ WIDTH 2) -90))
-
+(define C1 (make-cow 0            40)); at 0     moving left -> right
+(define C2 (make-cow WIDTH       -90)); at WIDTH moving right -> left
+(define C3 (make-cow (/ WIDTH 2) -90))
+#;
 (define (fn-for-cow c)
-  (... (cow-CowX c) ; Integer
+  (... (cow-CowX c) ; Natural[0,WIDTH]
        (cow-dx c))) ; Number
 
 ;; Template rules used:
@@ -72,18 +72,69 @@
 ;; start the world with ...
 ;; 
 (define (main c)
-  (big-bang c                   ; Cow
+  (big-bang c                           ; Cow
             (on-tick   advance-cow)     ; Cow -> Cow
-            (to-draw   render-cow)   ; Cow -> Image           
-            (on-key    ...)))    ; Cow KeyEvent -> Cow
+            (to-draw   render-cow)      ; Cow -> Image           
+            (on-key    key-direction))) ; Cow KeyEvent -> Cow
 
 ;; Cow -> Cow
-;; 
-;; !!!
-(define (advance-cow c) ...)
+;; Advances (cow-CowX c) by (Cow-dx c); bounce off edge
+(check-expect (advance-cow (make-cow 20  3)) (make-cow (+ 20 3)  3)) ; middle
+(check-expect (advance-cow (make-cow 20 -3)) (make-cow (- 20 3) -3))
+
+(check-expect (advance-cow (make-cow (- WIDTH 3) 3)) (make-cow WIDTH 3)) ; reaches edge 
+(check-expect (advance-cow (make-cow 3          -3)) (make-cow 0    -3))
+
+(check-expect (advance-cow (make-cow (- WIDTH 2) 3)) (make-cow WIDTH -3)) ; tries to pass edge 
+(check-expect (advance-cow (make-cow 2          -3)) (make-cow 0      3))
+;(define (advance-cow c) C1); stub
+
+;<template used from COW>
+(define (advance-cow c)
+  ( cond [(> (+ (cow-CowX c)(cow-dx c)) WIDTH) (make-cow WIDTH (-(cow-dx c)))] ; leave right edge      
+         [(< (+ (cow-CowX c)(cow-dx c))     0) (make-cow 0     (-(cow-dx c)))] ; left left edge      
+         [else
+          (make-cow (+ (cow-CowX c)(cow-dx c))
+                    (cow-dx c))]                                               ; keep going 
+  ))  
 
 
 ;; Cow -> Image
-;; render COW-IMG at (cow-CowX, CTR-Y) position on the MTS coordinate
-;; !!!
-(define (render-cow c) ...)
+;; render the correct image of the cow at its x-position on MTS
+(check-expect (render-cow (make-cow 20  3))
+              (place-image RCOW 20 CTR-Y MTS))
+(check-expect (render-cow (make-cow (/ WIDTH 2)  -3))
+              (place-image LCOW (/ WIDTH 2) CTR-Y MTS))
+;(define (render-cow c) MTS); stub
+
+;<template  used from Cow>
+(define (render-cow c)  
+      (place-image (choose-image c) (cow-CowX c) CTR-Y MTS))
+
+;; Cow -> Image
+;; return LCOW if dx < 0 else RCOW; LCOW if dx = 0
+(check-expect (choose-image (make-cow 20            3)) RCOW)
+(check-expect (choose-image (make-cow (/ WIDTH 2)  -3)) LCOW)
+(check-expect (choose-image (make-cow (/ WIDTH 2)  0))  LCOW)
+;(define (choose-image c) LCOW); stub
+
+;<template used from COW>
+(define (choose-image c)
+  (if (> (cow-dx c) 0)
+      RCOW
+      LCOW
+     ))
+
+
+;; Cow KeyEvent -> Cow
+;; Change the cow image direction when the space key is pressed
+(check-expect (key-direction (make-cow 20   3) " ")    (make-cow 20  -3)) ; right -> left
+(check-expect (key-direction (make-cow 20  -3) " ")    (make-cow 20   3)) ; left  -> right 
+(check-expect (key-direction (make-cow 20  -3) "left") (make-cow 20  -3)) ; different key, no change
+;(define (key-direction c ke) C1); stub
+
+(define (key-direction c ke)
+  (if (string=? " " ke)
+      (make-cow (cow-CowX c) (-(cow-dx c)))
+      c
+  ))
