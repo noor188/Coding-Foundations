@@ -64,3 +64,62 @@
 ; 
 
 
+
+(require 2htdp/image)
+(require 2htdp/universe)
+
+;; Throwing a water balloon, it flys accross the screen
+;; =================
+;; Constants:
+(define HEIGHT 600)
+(define WIDTH  400)
+(define MTS (empty-scene WIDTH HEIGHT))
+(define CTR-Y (/ HEIGHT 2))
+(define WATER-BALLOON .)
+
+;; =================
+;; Data definitions:
+(define-struct balloon (x angle))
+;; Balloon is (make-balloon Number Natural[0, 360])
+;; interp. a balloon at x position x and angle angle where:
+;;                    x: number in the MTS coordinate
+;;                angle: the balloon angle in the range 0-360
+
+(define B1 (make-balloon 0 150))           ; Start
+(define B2 (make-balloon (/ WIDTH 2) 280)) ; middle
+(define B3 (make-balloon WIDTH 0))         ; end
+
+(define (fn-for-balloon b)
+  (... (balloon-x b) (balloon-angle b)))
+
+;; Template rules used:
+;; - Compound: 2 fields
+
+
+;; =================
+;; Functions:
+
+;; balloon -> balloon
+;; start the world with (main (make-balloon 0 150))
+;; 
+(define (main b)
+  (big-bang b                            ; balloon
+            (on-tick   next-balloon)     ; balloon -> balloon
+            (to-draw   render-balloon)   ; balloon -> Image           
+            (on-key    key-handler)))    ; balloon KeyEvent -> balloon
+
+;; balloon -> balloon
+;; produce the next x postion and angle of balloon
+;; !!! one task per function rule --- helper function for angle
+(define (next-balloon b) B1) ; stub
+
+
+;; balloon-> Image
+;; render WATER-BALLOON image at x postion and angle angle into the MTS coordinates
+;; !!!
+(define (render-balloon b) MTS); stub
+
+;; balloon KeyEvent -> balloon
+;; reset the animation into x = 0 and angle 150 when the space key is pressed
+;; !!!
+(define (key-handler b ke) B1); stub
