@@ -71,16 +71,18 @@
 ;; Throwing a water balloon, it flys accross the screen
 ;; =================
 ;; Constants:
-(define HEIGHT 600)
-(define WIDTH  400)
+(define HEIGHT 400)
+(define WIDTH  600)
 (define MTS (empty-scene WIDTH HEIGHT))
 (define CTR-Y (/ HEIGHT 2))
 (define WATER-BALLOON .)
+(define DEGREE 90)
+(define XSHIFT 10)
 
 ;; =================
 ;; Data definitions:
 (define-struct balloon (x angle))
-;; Balloon is (make-balloon Number Natural[0, 360])
+;; Balloon is (make-balloon Number Natural[0, 360))
 ;; interp. a balloon at x position x and angle angle where:
 ;;                    x: number in the MTS coordinate
 ;;                angle: the balloon angle in the range 0-360
@@ -88,7 +90,7 @@
 (define B1 (make-balloon 0 150))           ; Start
 (define B2 (make-balloon (/ WIDTH 2) 280)) ; middle
 (define B3 (make-balloon WIDTH 0))         ; end
-
+#;
 (define (fn-for-balloon b)
   (... (balloon-x b) (balloon-angle b)))
 
@@ -104,22 +106,52 @@
 ;; 
 (define (main b)
   (big-bang b                            ; balloon
-            (on-tick   next-balloon)     ; balloon -> balloon
+            (on-tick   next-balloon 0.5)     ; balloon -> balloon
             (to-draw   render-balloon)   ; balloon -> Image           
             (on-key    key-handler)))    ; balloon KeyEvent -> balloon
 
 ;; balloon -> balloon
-;; produce the next x postion and angle of balloon
-;; !!! one task per function rule --- helper function for angle
-(define (next-balloon b) B1) ; stub
+;; produce the next x postion x by adding XSHIFT and angle angle of balloon
+(check-expect (next-balloon (make-balloon 0 150))     (make-balloon (+ 0 XSHIFT)     (next-angle 150)))
+(check-expect (next-balloon (make-balloon WIDTH 359)) (make-balloon (+ WIDTH XSHIFT) (next-angle 359)))
+
+;(define (next-balloon b) B1) ; stub
+;<template used from Balloon>
+(define (next-balloon b)
+  (make-balloon (+ (balloon-x b) XSHIFT)
+                 (next-angle (balloon-angle b))))
+
+;; Interval[0,360] -> Interval[0, 360]
+;; Produce the next angle by adding DEGREE degrees clockwise to angle
+(check-expect (next-angle 0)    (+ DEGREE 0))
+(check-expect (next-angle 180)  (+ DEGREE 180))
+(check-expect (next-angle 360)  (- (+ 360 DEGREE) 360)) ; edge case
+
+;(define (next-angle angle) 0); stub
+(define (next-angle angle)
+  (if ( >(+ angle DEGREE) 360)
+      (- (+ angle DEGREE) 360)
+      (+ angle DEGREE)))
 
 
 ;; balloon-> Image
-;; render WATER-BALLOON image at x postion and angle angle into the MTS coordinates
-;; !!!
-(define (render-balloon b) MTS); stub
+;; render WATER-BALLOON image at x postion and rotate by angle into the MTS coordinates
+(check-expect (render-balloon (make-balloon 0 150))     (place-image (rotate 150 WATER-BALLOON) 0 CTR-Y MTS))
+(check-expect (render-balloon (make-balloon WIDTH 270)) (place-image (rotate 270 WATER-BALLOON) WIDTH CTR-Y MTS))
+;(define (render-balloon b) MTS); stub
+
+(define (render-balloon b)
+  (place-image (rotate (balloon-angle b) WATER-BALLOON)
+               (balloon-x b)
+               CTR-Y
+               MTS))
 
 ;; balloon KeyEvent -> balloon
 ;; reset the animation into x = 0 and angle 150 when the space key is pressed
-;; !!!
-(define (key-handler b ke) B1); stub
+(check-expect (key-handler (make-balloon 10 180) " ") (make-balloon 0 150))
+(check-expect (key-handler (make-balloon 70 240) "q") (make-balloon 70 240))
+;(define (key-handler b ke) B1); stub
+
+(define (key-handler b ke)
+  (cond [(key=? ke " ") (make-balloon 0 150)]
+        [else b]))
