@@ -1,0 +1,6 @@
+; create a program that allows you to click on a spot on the screen to create a flower,
+; which then grows over time. If you click again the first flower is replaced by a new
+; one at the new position.
+
+
+
