@@ -4,3 +4,79 @@
 
 
 
+(require 2htdp/image)
+(require 2htdp/universe)
+
+;; Creates a flower on the mouse click spot, it grows over time
+
+;; =================
+;; Constants:
+(define HEIGHT 400)
+(define WIDTH  600)
+(define MTS (empty-scene WIDTH HEIGHT))
+
+
+;; =================
+;; Data definitions:
+(define-struct padal (circle-radius side-length))
+;; Padal is  (make-padal Number Number)
+;; interp. a (make-padal circle-radius side-length) is a padal where :
+;;         circle-radius : the padal circle radius
+;;           side-length : the padel tringle side-length
+;;          creates a padel composied of one circle and one triangle where padal-radius = side-length
+
+(define PADAL-1 (make-padal 15 15))
+#;
+(define (fn-for-padal p)
+  (... (padal-circle-radius p) (padal-side-length p)))
+
+;; template rules used:
+;; compound: 2 fields
+
+(define-struct flower (ctr-x ctr-y ctr-radius padal))
+;; Flower is (make-flower Number Number Number Padal)
+;; interp.   (make-flower ctr-x ctr-y ctr-radius padals) is a flower where:
+;;          ctr-x, ctr-y : the x,y postion of the flower on the MTS coordinate
+;;            ctr-radius : is the flower center circle radius
+;;                padals : one padal
+
+(define FLOWER-1 (make-flower 0 (/ HEIGHT 2) 15 PADAL-1))
+
+(define (fn-for-flower f)
+  (... (flower-ctr-x f) (flower-ctr-y f)    ; Number Number
+       (flower-ctr-radius f)                ; Number
+       (fn-for-padal(flower-ctr-padal f)))) ; Padal
+
+;; template rule used:
+;; compoud : 3 fields , Flower
+;; compound : 2 fields, Padal
+
+
+;; =================
+;; Functions:
+
+;; FLower -> FLower
+;; start the world with (main (make-flower 0 300 30 (make-padal 30 30)))
+;; 
+(define (main f)
+  (big-bang f                           ; FLower
+            (on-tick   next-flower)     ; FLower -> FLower
+            (to-draw   render-flower)   ; FLower -> Image          
+            (on-mouse  mouse-handler))) ; FLower Integer Integer MouseEvent -> FLower
+          
+
+;; FLower -> FLower
+;; produce the next FLower x,y,ctr-circle and padel
+;; !!!
+(define (next-flower f) FLOWER-1)
+
+
+;; FLower -> Image
+;; render the created flower at x,y postion onto the MTS coordinate 
+;; !!!
+(define (render-flower f) MTS)
+
+;; FLower Integer Integer MouseEvent -> FLower
+;; Creates a Flower on the clicked mouse spot
+;; !!!
+(define (mouse-handler f x y me) FLOWER-1)
