@@ -1,0 +1,41 @@
+
+;; quidditch-starter.rkt
+
+; 
+; PROBLEM:
+; 
+; Imagine that you are designing a program that will keep track of
+; your favorite Quidditch teams. (http://iqasport.org/).
+; 
+; Design a data definition to represent a list of Quidditch teams. 
+;    
+
+
+;; ListOfString is one of:
+;; - empty
+;; - (cons String ListOfString)
+;; interp.  a list of strings
+
+(define LOS1 empty)
+(define LOS2 (cons "McGill" empty))
+(define LOS3 (cons "UBS" (cons "McGill" empty)))
+
+(define (fn-for-los los)
+  (cond [(empty? los) (...)]
+        [else         (... (first los)                     ; String
+                           (fn-for-los (rest los)))]))     ; ListOfString
+
+;; Template rules used:
+;; - one of: 2 cases
+;; - atomic distinct : empty
+;; - compound : (cons String ListOfString )
+
+
+
+; 
+; PROBLEM:
+; 
+; We want to know whether your list of favorite Quidditch teams includes
+; UBC! Design a function that consumes ListOfString and produces true if 
+; the list includes "UBC".
+; 
