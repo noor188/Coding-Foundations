@@ -14,6 +14,9 @@
 (define HEIGHT 400)
 (define WIDTH  600)
 (define MTS (empty-scene WIDTH HEIGHT))
+(define CTR-RADIUS   10)
+(define PADAL-WIDTH  20)
+(define PADAL-HEIGHT 70)
 
 
 ;; =================
@@ -25,7 +28,7 @@
 ;;         height : the padel pinhole height
 ;;          creates a padel composied of one pinhole
 
-(define PADAL-1 (make-padal 15 15))
+(define PADAL-1 (make-padal PADAL-WIDTH PADAL-HEIGHT))
 #;
 (define (fn-for-padal p)
   (... (padal-width p) (padal-height p)))
@@ -33,115 +36,112 @@
 ;; template rules used:
 ;; compound: 2 fields
 
-(define-struct flower (ctr-radius padal))
+(define-struct flower (ctr-x ctr-y ctr-radius padal))
 ;; Flower is (make-flower Number Number Number Padal)
 ;; interp.   (make-flower ctr-x ctr-y ctr-radius padals) is a flower where:
+;;           ctr-x ctr-y : flower x,y postion on the MTS coordinate
 ;;            ctr-radius : is the flower center circle radius
 ;;                padals : one padal
 
-(define FLOWER-1 (make-flower 15 PADAL-1))
+(define FLOWER-1 (make-flower 0 0 15 PADAL-1))
 #;
 (define (fn-for-flower f)
-  (... (flower-ctr-radius f)                ; Number
+  (... (flower-ctr-x f) (flower-ctr-y f)    ; Number
+       (flower-ctr-radius f)                ; Number
        (fn-for-padal(flower-padal f))))     ; Padal
 
-;; template rule used:
-;; compoud :  1 fields , Flower
-;; compound : 2 fields , Padal
+;; template rule used:+
+;; compound : 3 fields ,Flower
+;; compound : 2 fields ,Padal
 
 
 ;; =================
 ;; Functions:
 
 ;; FLower -> FLower
-;; start the world with (main (make-flower 0 0 0 (make-padal 0 0)))
+;; start the world with (main (make-flower -100 -100 0 (make-padal 0 0)))
 ;; 
 (define (main f)
-  (big-bang f                           ; FLower           
-            (to-draw   render-flower)   ; FLower -> Image          
-            (on-mouse  mouse-handler))) ; FLower Integer Integer MouseEvent -> FLower
+  (big-bang f                           ; FLower
+            (on-mouse  mouse-handler)   ; FLower Integer Integer MouseEvent -> FLower
+            (to-draw   render-flower)   ; FLower -> Image
+            (on-tick   next-flower 1))) ; Flower -> Flower
+            
           
 
 ;; FLower -> FLower
-;; produce the next FLower ctr-circle by adding 1 and (padel width height)
-(check-expect (next-flower (make-flower 15 PADAL-1)) (make-flower (+ 15 1) (next-padal PADAL-1)))
+;; produce the next FLower CTR-RADIUS by adding 1 and finds the next-padal
+(check-expect (next-flower (make-flower 0 0 CTR-RADIUS (make-padal PADAL-WIDTH PADAL-HEIGHT))) (make-flower 0 0 (+ CTR-RADIUS 1) (next-padal (make-padal PADAL-WIDTH PADAL-HEIGHT))))
 ;(define (next-flower f) FLOWER-1); stub
 
 (define (next-flower f)
-  (make-flower (+ (flower-ctr-radius f)  1)      ; Number
-               (next-padal(flower-padal f))))    ; Padal
-
+  (make-flower (flower-ctr-x f) (flower-ctr-y f)   
+       (+ (flower-ctr-radius f) 1)
+       (next-padal (flower-padal f))))
 
 ;; padal -> padal
-;; produce the next padal by adding 1 to both width and height
-(check-expect (next-padal (make-padal 15 15)) (make-padal (+ 15 1) (+ 15 1)))
+;; produce the next padal by adding 1 to each of PADAL-WIDTH, and PADAL-HEIGHT
+(check-expect (next-padal (make-padal 0 0)) (make-padal (+ 0 1) (+ 0 1)))
 ;(define (next-padal p) PADAL-1); stub
 
 (define (next-padal p)
   (make-padal (+ (padal-width p) 1) (+ (padal-height p) 1)))
 
 
+; (make-padal (+ PADAL-WIDTH 1) (+ PADAL-HEIGHT 1))
+
 ;; FLower -> Image
 ;; render the created flower at x,y postion onto the MTS coordinate 
-(check-expect (render-flower (make-flower 15 PADAL-1)) (place-image (draw-flower (make-flower 15 PADAL-1)) 0 (/ HEIGHT 2) MTS))
+(check-expect (render-flower (make-flower 0 0 15 PADAL-1)) (place-image (draw-flower (make-flower 0 0 15 PADAL-1)) 0 0 MTS))
 ;(define (render-flower f) MTS); stub
 
 (define (render-flower f)
   (place-image (draw-flower f)
-               (flower-ctr-x f)
-               (flower-ctr-y f)   
-                MTS)) 
+               (flower-ctr-x f) (flower-ctr-y f)
+               MTS))
 
 
 ;; Flower -> Image
-;; draws a flower composed of one circle and 6 padals
-(check-expect (draw-flower (make-flower 0 (/ HEIGHT 2) 15 PADAL-1)) (clear-pinhole
-                                                                     (overlay/pinhole
-                                                                     (circle 15 "solid" "yellow")
-                                                                     (rotate (* 60 0) (draw-petal (make-flower 0 (/ HEIGHT 2) 15 PADAL-1)))
-                                                                     (rotate (* 60 0) (draw-petal (make-flower 0 (/ HEIGHT 2) 15 PADAL-1)))
-                                                                     (rotate (* 60 0) (draw-petal (make-flower 0 (/ HEIGHT 2) 15 PADAL-1)))
-                                                                     (rotate (* 60 0) (draw-petal (make-flower 0 (/ HEIGHT 2) 15 PADAL-1)))
-                                                                     (rotate (* 60 0) (draw-petal (make-flower 0 (/ HEIGHT 2) 15 PADAL-1)))
-                                                                     (rotate (* 60 0) (draw-petal (make-flower 0 (/ HEIGHT 2) 15 PADAL-1))))))
-;(define (draw-flower f) MTS); stub
+;; Draws a flower composed of one circle and 6 padals
+(check-expect (draw-flower (make-flower 0 0 15 PADAL-1))  (clear-pinhole
+                                                           (overlay/pinhole
+                                                            (circle 15 "solid" "yellow")
+                                                            (rotate (* 60 0) (draw-padal PADAL-1))
+                                                            (rotate (* 60 1) (draw-padal PADAL-1))
+                                                            (rotate (* 60 2) (draw-padal PADAL-1))
+                                                            (rotate (* 60 3) (draw-padal PADAL-1))
+                                                            (rotate (* 60 4) (draw-padal PADAL-1))
+                                                            (rotate (* 60 5) (draw-padal PADAL-1)))))
+;(define (draw-flower f) MTS);
 
 (define (draw-flower f)
   (clear-pinhole
-   (overlay/pinhole
-                (circle (flower-ctr-radius f) "solid" "yellow")
-                (rotate (* 60 0) (draw-petal f))
-                (rotate (* 60 0) (draw-petal f))
-                (rotate (* 60 0) (draw-petal f))
-                (rotate (* 60 0) (draw-petal f))
-                (rotate (* 60 0) (draw-petal f))
-                (rotate (* 60 0) (draw-petal f))
-                )))
+                  (overlay/pinhole
+                    (circle (flower-ctr-radius f) "solid" "yellow")
+                    (rotate (* 60 0) (draw-padal (flower-padal f)))
+                    (rotate (* 60 1) (draw-padal (flower-padal f)))
+                    (rotate (* 60 2) (draw-padal (flower-padal f)))
+                    (rotate (* 60 3) (draw-padal (flower-padal f)))
+                    (rotate (* 60 4) (draw-padal (flower-padal f)))
+                    (rotate (* 60 5) (draw-padal (flower-padal f)))
+                    )))
 
 
 ;; Padal -> Image
-;; draws a padal compoused of a pinhole
-(check-expect (draw-petal (make-flower 0 (/ HEIGHT 2) 15 (make-padal 15 15))) (put-pinhole
-                                                                               0 (/ HEIGHT 2)
-                                                                              (ellipse 15 15 "solid" "red")))
-;(define (draw-petal p) MTS); stub
+;; Draws a padal composed of one ellipse
+(check-expect (draw-padal (make-padal 100 40)) (put-pinhole 20 20 (ellipse 100 40 "solid" "red")))
+;(define (draw-padal p) MTS); stub
 
-(define (draw-petal f)
-  (put-pinhole
-    (flower-ctr-x f) (flower-ctr-y f) 
-    (ellipse (padal-width (flower-padal f)) (padal-height (flower-padal f)) "solid" "red"))
-   )
-
+(define (draw-padal p)
+  (put-pinhole 20 20 (ellipse (padal-width p) (padal-height p) "solid" "red")))
 
 ;; FLower Integer Integer MouseEvent -> FLower
-;; Produce the next Flower on the clicked mouse spot 
-(check-expect (mouse-handler (make-flower 0 (/ HEIGHT 2) 15 PADAL-1) 100 300 "button-down" ) (next-flower (make-flower 0 (/ HEIGHT 2) 15 PADAL-1)))
-(check-expect (mouse-handler (make-flower 0 (/ HEIGHT 2) 15 PADAL-1) 100 300 "button-up"   ) (make-flower 0 (/ HEIGHT 2) 15 PADAL-1))
+;; Produce the a Flower with default values (CTR-RADIUS, PADAL-WIDTH, PADAL-HEIGHT) on the clicked mouse spot 
+(check-expect (mouse-handler  (make-flower 0 0 0 (make-padal 0 0)) 300 400 "button-down") (make-flower 300 400 CTR-RADIUS (make-padal PADAL-WIDTH PADAL-HEIGHT)))
+(check-expect (mouse-handler  (make-flower 0 0 0 (make-padal 0 0)) 300 400 "enter")       (make-flower 0 0 0 (make-padal 0 0)))
 ;(define (mouse-handler f x y me) FLOWER-1); stub
 
 (define (mouse-handler f x y me)
-  (cond [(mouse=? me "button-down") (next-flower f)]
+  (cond [(mouse=? me "button-down") (make-flower x y CTR-RADIUS (make-padal PADAL-WIDTH PADAL-HEIGHT))]
         [else f]))
-
-
 
