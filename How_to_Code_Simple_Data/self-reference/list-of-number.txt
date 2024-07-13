@@ -1,0 +1,42 @@
+;; ListOfNumber is one of:
+;; - empty
+;; - (cons Number ListOfNumber)
+;; interp. a list of numbers
+
+(define LON1 empty)
+(define LON2 (cons 1 empty))
+(define LON3 (cons -1 empty))
+(define LON4 (cons 2 (cons 1 empty)))
+(define LON5 (cons 2 (cons -1 empty)))
+#;
+(define (fn-for-lon lon)
+  (cond [(empty? lon)(...)]
+        [ else
+          (... (first lon)
+               (fn-for-lon (rest lon)))]))
+
+;; Template Rules Used:
+;; - one of: 2 cases
+;; - atomic distinct: empty
+;; - compound: (cons Number ListOfNumber)
+;; - [coming soon]
+
+;; ==========
+;; Functions
+
+;; ListOfNumber -> Boolean
+;; produce true if lon contains a negative number
+(check-expect (contain-neg? LON1) false)
+(check-expect (contain-neg? LON2) false)
+(check-expect (contain-neg? LON3) true)
+(check-expect (contain-neg? LON4) false)
+(check-expect (contain-neg? LON5) true)
+;(define (contain-neg? lon) true); stub
+
+(define (contain-neg? lon)
+  (cond [(empty? lon) false]
+        [ else
+          ( if ( negative? (first lon))
+               true
+               (contain-neg? (rest lon)))]))
+
