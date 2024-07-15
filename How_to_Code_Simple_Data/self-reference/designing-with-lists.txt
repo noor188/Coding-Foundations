@@ -1,0 +1,73 @@
+
+;; designing-with-lists-1-starter.rkt
+
+; 
+; PROBLEM:
+; 
+; You've been asked to design a program having to do with all the owls
+; in the owlery.
+; 
+; (A) Design a data definition to represent the weights of all the owls. 
+;     For this problem call it ListOfNumber.
+; (B) Design a function that consumes the weights of owls and produces
+;     the total weight of all the owls.
+; (C) Design a function that consumes the weights of owls and produces
+;     the total number of owls.
+;     
+
+
+;; Data definitions
+
+;; ListOfNumber. is one of:
+;; - empty
+;; - (cons Number ListOfOwl)
+;; interp. a list of owls weights in ounces
+
+(define LON-1 empty)
+(define LON-2 (cons 25 (cons 34 empty)))
+#;
+(define (fn-for-lon lon)
+  (cond [(empty? lon) (...)]
+        [else
+         (... (first lon)                   ; string
+              (fn-for-lon (rest lon)))]))   ; ListOfOwl
+
+;; Template rules used:
+;; one of : 2 cases
+;; atomic distict: empty
+;; compound : (cons Number ListOfOwl)
+;; self reference: natural recursion
+
+;; Functions
+
+;; ListOfNumber -> Number
+;; Produce the sum of all owls weights
+(check-expect (sum-weight LON-1) 0)
+(check-expect (sum-weight (cons 60 empty)) (+ 60 0))
+(check-expect (sum-weight LON-2) (+ 25 (+ 34 0)))
+;(define (sum-weight lon) 0); stub
+
+;< template from ListOfNumber >
+
+(define (sum-weight lon)
+  (cond [(empty? lon) 0]
+        [else
+         (+ (first lon)                   ; string
+             (sum-weight (rest lon)))]))   ; ListOfOwl
+
+;; ListOfNumber -> Number
+;; Produce the total number of weights in consumed list
+(check-expect (count-owl LON-1) 0)
+(check-expect (count-owl (cons 60 empty)) (+ 1 0))
+(check-expect (count-owl LON-2) (+ 1(+ 1 0)) 
+;(define (count-owl lon) 0); stub
+
+;< template from ListOfNumber >
+
+(define (count-owl lon)
+  (cond [(empty? lon) 0]
+        [else
+         (+ 1                 
+            (count-owl (rest lon)))]))  
+
+
