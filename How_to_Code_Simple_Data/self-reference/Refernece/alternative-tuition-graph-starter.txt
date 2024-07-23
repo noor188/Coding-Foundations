@@ -27,6 +27,21 @@
 ; 
 
 
+(require 2htdp/image)
+
+;; Constants:
+
+(define FONT-SIZE 24)
+(define FONT-COLOR "black")
+(define FONT-ANGLE 90)
+
+(define Y-SCALE   1/200)
+(define BAR-WIDTH 30)
+(define BAR-COLOR "lightblue")
+(define SPACE 5)
+
+;; Data Definition
+
 (define-struct school (name tuition next))
 ;; School is one of:
 ;;  - false
@@ -37,7 +52,7 @@
 (define S-1 false)
 (define S-2 (make-school "NMSU" 20000 false))
 (define S-3 (make-school "UTEP" 15000 (make-school "NMSU" 20000 false)))
-
+#;
 (define (fn-for-school s)
   (cond [(false? s) (...)]
         [ else
@@ -52,4 +67,50 @@
 ;; atomic non-distinct: String
 ;; atomic non-distinct: Natural
 ;; self-refernece: (school-next s) School
+
+;; Functions
+
+;; School -> Image
+;; Produce a chart for all schools in the list
+(check-expect (chart S-1)
+              (rectangle 0 0 "solid"   BAR-COLOR)
+              )
+(check-expect (chart S-2)
+              (beside/align "bottom"
+              (overlay
+               (rotate    FONT-ANGLE (text (school-name S-2) FONT-SIZE FONT-COLOR))
+               (rectangle BAR-WIDTH  (* Y-SCALE (school-tuition S-2)) "solid"   BAR-COLOR)
+               (rectangle BAR-WIDTH  (* Y-SCALE (school-tuition S-2)) "outline" "black")
+              )
+              (rectangle 0 0 "solid"   BAR-COLOR)
+              ))
+(check-expect (chart S-3)
+              (beside/align "bottom"
+                (overlay
+               (rotate    FONT-ANGLE(text (school-name S-3) FONT-SIZE FONT-COLOR))
+               (rectangle BAR-WIDTH (* Y-SCALE (school-tuition S-3)) "solid"   BAR-COLOR)
+               (rectangle BAR-WIDTH (* Y-SCALE (school-tuition S-3)) "outline" "black"))
+               
+               (overlay
+               (rotate    FONT-ANGLE(text (school-name (school-next S-3)) FONT-SIZE FONT-COLOR))
+               (rectangle BAR-WIDTH (* Y-SCALE (school-tuition (school-next S-3))) "solid"   BAR-COLOR)
+               (rectangle BAR-WIDTH (* Y-SCALE (school-tuition (school-next S-3))) "outline" "black"))
+
+               (rectangle 0 0 "solid"   BAR-COLOR)
+              ))
+
+;(define (chart s) (circle 4 "solid" "red")); stub
+
+;< template used from School>
+
+(define (chart s)
+  (cond [(false? s) (rectangle 0 0 "solid"   BAR-COLOR)]
+        [ else
+          (beside/align "bottom"
+                (overlay
+                  (rotate    FONT-ANGLE (text (school-name s) FONT-SIZE FONT-COLOR))
+                  (rectangle BAR-WIDTH  (* Y-SCALE (school-tuition s)) "solid"   BAR-COLOR)
+                  (rectangle BAR-WIDTH  (* Y-SCALE (school-tuition s)) "outline" "black")
+                 )          
+               (chart(school-next s)))]))        ; School
 
