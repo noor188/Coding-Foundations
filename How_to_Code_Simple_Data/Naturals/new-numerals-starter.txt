@@ -33,13 +33,30 @@
 (define N7 (cons "!" N6))       ;7
 (define N8 (cons "!" N7))       ;8
 
+
 ;; These are the primitive that operate NATURAL
 (define (ZERO? n) (empty? n))      ; Any         -> Boolean
 (define (ADD1  n) (cons "!" n))    ; NATURAL     -> NATURAL
 (define (SUB1  n)  (rest n))       ; NATURAL[>0] -> NATURAL
 
-(define (fn-for-NATURAL n)
+(define (fn-for-NATRUAL n)
   (cond [(ZERO? n) (...)]
         [ else
           (... n
-               (fn-for-NATRUAL (SUB1 n)))]))
+               (fn-for-NATRUAL(SUB1 n)))]))
+
+;; NATURAL NATURAL -> NATURAL
+;; prodcue a + b
+(check-expect (ADD N0 N1) N1)
+(check-expect (ADD N0 N3) N3)
+(check-expect (ADD N4 N3) N7)
+;(define (ADD a b) N0); stub
+
+(define (ADD a b)
+  (cond [(ZERO? b) a]
+        [ else
+          (ADD   (ADD1 a)
+                 (SUB1 b))]))
+
+;; NATURAL NATURAL -> NATURAL
+;; produce a - b
