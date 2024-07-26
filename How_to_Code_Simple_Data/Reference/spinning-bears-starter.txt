@@ -37,57 +37,85 @@
 (define HEIGHT 400)
 (define WIDTH  600)
 (define MTS (empty-scene WIDTH HEIGHT))
-(define ANGLE 30)
-(define SPEED 5)
+(define ANGLE-INCREASE 30)
+(define SPEED 1)
 (define BEAR-IMG .)
 
 
 ;; =================
 ;; Data definitions:
 
-(define-struct position (x y))
-;; Position is (make-position Number Number)
-;; interp. (x,y) postion on the MTS coordinate
+(define-struct bear (x y angle))
+;; Bear is (make-bear Number Number Number)
+;; interp. (x,y) postion and angle of bear on the MTS coordinate
 
-(define P-1 (make-position 0 0))
-(define P-2 (make-position 200 300))
-
+(define P-1 (make-bear   0   0  30))
+(define P-2 (make-bear 200 300  60))
+#;
 (define (fn-for-position p)
-  (... (position-x p)        ; Number
-       (position-y p)))      ; Number
+  (... (bear-x p)            ; Number
+       (bear-y p)            ; Number
+       (bear-angle p)))      ; Number
 
 ;; Template rules used:
-;; - compound: (make-position x y)
+;; - compound: (make-bear x y angle)
 
 
 ;; =================
 ;; Functions:
 
-;; Position -> Position
-;; start the world with (main (make-position (/ WIDTH 2) (/ HEIGHT 2)))
+;; Bear -> Bear
+;; start the world with (main (make-bear (/ WIDTH 2) (/ HEIGHT 2) 0))
 ;; 
 (define (main p)
-  (big-bang p                            ; Position
-            (on-tick   next-bear)        ; Position -> Position
-            (to-draw   render-bear)      ; Position -> Image           
-            (on-mouse  mouse-hanlder)))  ; Position Integer Integer MouseEvent -> Position
+  (big-bang p                            ; Bear
+            (on-tick   next-bear)        ; Bear -> Bear
+            (to-draw   render-bear)      ; Bear -> Image           
+            (on-mouse  mouse-hanlder)))  ; Bear Integer Integer MouseEvent -> Bear
               
 
-;; Position -> Position
-;; produce the next bear postion (x,y) on the MTS
-;; !!!
-(define (next-bear p) P-1); stub
+;; Bear -> Bear
+;; produce the next bear angle by adding 30
+(check-expect (next-bear (make-bear   0   0  30)) (make-bear 0 0     (rotate-img 30)))
+(check-expect (next-bear (make-bear 300 100 359)) (make-bear 300 100 (rotate-img 359)))
+;(define (next-bear p) P-1); stub
 
+(define (next-bear p)
+  (make-bear (bear-x p)(bear-y p)
+             (rotate-img (bear-angle p))
+  ))      
 
-;; Position -> Image
+;; Number -> Number
+;; Produce the next angle by adding ANGLE-INCREASE
+(check-expect (rotate-img 30 ) (+ 30 30))
+(check-expect (rotate-img 359) (- (+ 359 30) 360 ))
+;(define (rotate-img a) 0); stub
+
+(define(rotate-img a)
+  ( if (> (+ 30 a) 359)
+           (- (+ 30 a) 360)
+           (+ 30 a)
+       ))
+
+;; Bear -> Image
 ;; render BEAR-IMG into (x,y) postion on the MTS 
-;; !!!
-(define (render-bear p) MTS); stub
+(check-expect (render-bear (make-bear 0 0      30)) (place-image (rotate 30  BEAR-IMG) 0   0   MTS))
+(check-expect (render-bear (make-bear 300 100 359)) (place-image (rotate 359 BEAR-IMG) 300 100 MTS))
+;(define (render-bear p) MTS); stub
 
-;; Position Integer Integer MouseEvent -> Position
+(define (render-bear p)
+  (place-image (rotate (bear-angle p) BEAR-IMG) (bear-x p) (bear-y p) MTS))     
+
+;; Bear Integer Integer MouseEvent -> Bear
 ;; clicking the mouse at a spot on the MTS will replace the old bear with a new bear at the new spot
-;; !!!
-(define (mouse-hanlder p x y me) P-1); stub
+(check-expect (mouse-hanlder (make-bear 300 100 359) 500 100 "button-down") (make-bear 500 100 359))
+(check-expect (mouse-hanlder (make-bear 300 100 359) 500 100 "enter") (make-bear 300 100 359))
+;(define (mouse-hanlder p x y me) P-1); stub
+
+(define (mouse-hanlder p x y me)
+  ( cond [(mouse=? me "button-down") (make-bear x y(bear-angle p) )]
+        [else p]))   
+
 
 
 
