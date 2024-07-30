@@ -18,45 +18,55 @@
 ; 
 
 
-;; Natural is one of:
+;; NATURAL is one of:
 ;; - empty
 ;; - (cons "!" NATURAL)
-;; interp. a natrual number, the number of "!" in the list is the number 
+;; interp. a list of "!" where the count equals the natrual number
 
-(define N0 empty)               ;0
-(define N1 (cons "!" N0))       ;1
-(define N2 (cons "!" N1))       ;2
-(define N3 (cons "!" N2))       ;3
-(define N4 (cons "!" N3))       ;4
-(define N5 (cons "!" N4))       ;5
-(define N6 (cons "!" N5))       ;6
-(define N7 (cons "!" N6))       ;7
-(define N8 (cons "!" N7))       ;8
+(define N-0 empty)           ; 0
+(define N-1 (cons "!" N-0))  ; 1
+(define N-2 (cons "!" N-1))  ; 2
+(define N-3 (cons "!" N-2))  ; 3
+(define N-4 (cons "!" N-3))  ; 4
+(define N-5 (cons "!" N-4))  ; 5
+(define N-6 (cons "!" N-5))  ; 6
+(define N-7 (cons "!" N-6))  ; 7
+(define N-8 (cons "!" N-7))  ; 8
 
-
-;; These are the primitive that operate NATURAL
-(define (ZERO? n) (empty? n))      ; Any         -> Boolean
-(define (ADD1  n) (cons "!" n))    ; NATURAL     -> NATURAL
-(define (SUB1  n)  (rest n))       ; NATURAL[>0] -> NATURAL
-
-(define (fn-for-NATRUAL n)
+;; Primative opertations to handle NATURAL
+(define (ZERO? n) (empty? n))   ; Any -> Boolean
+(define (ADD1  n) (cons "!" n)) ; NATURAL -> NATURAL
+(define (SUB1  n) (rest n))     ; NATURAL -> NATURAL
+#;
+(define (fn-for-NATURAL n)
   (cond [(ZERO? n) (...)]
         [ else
-          (... n
-               (fn-for-NATRUAL(SUB1 n)))]))
+          (... (first n)      ; empty
+               (fn-for-NATURAL(rest n)))]))   ; NATURAL
+
 
 ;; NATURAL NATURAL -> NATURAL
-;; prodcue a + b
-(check-expect (ADD N0 N1) N1)
-(check-expect (ADD N0 N3) N3)
-(check-expect (ADD N4 N3) N7)
-;(define (ADD a b) N0); stub
+;; Produce a + b
+(check-expect (ADD N-0 N-1) N-1)
+(check-expect (ADD N-2 N-3) N-5)
+(check-expect (ADD N-3 N-4) N-7)
+;(define (ADD a b) 0); stub
 
 (define (ADD a b)
   (cond [(ZERO? b) a]
         [ else
-          (ADD   (ADD1 a)
-                 (SUB1 b))]))
+          (ADD (ADD1 a)(SUB1 b))])) 
 
 ;; NATURAL NATURAL -> NATURAL
 ;; produce a - b
+(check-expect (SUB N-1 N-0) N-1)
+(check-expect (SUB N-3 N-2) N-1)
+(check-expect (SUB N-4 N-2) N-2)
+(check-expect (SUB N-5 N-1) N-4)
+;(define (SUB a b) 0); stub
+
+(define (SUB a b)
+  (cond [(ZERO? b) a]
+        [ else
+          (SUB (SUB1 a)        ; empty
+               (SUB1 b))]))   ; NATURAL
