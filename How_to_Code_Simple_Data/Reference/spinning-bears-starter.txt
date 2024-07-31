@@ -39,6 +39,7 @@
 (define MTS (empty-scene WIDTH HEIGHT))
 (define ANGLE-INCREASE 30)
 (define SPEED 1)
+(define ANGLE 0)
 (define BEAR-IMG .)
 
 
@@ -51,70 +52,116 @@
 
 (define P-1 (make-bear   0   0  30))
 (define P-2 (make-bear 200 300  60))
+(define P-3 (make-bear 100 500  359))
 #;
-(define (fn-for-position p)
-  (... (bear-x p)            ; Number
-       (bear-y p)            ; Number
-       (bear-angle p)))      ; Number
+(define (fn-for-bear b)
+  (... (bear-x b)            ; Number
+       (bear-y b)            ; Number
+       (bear-angle b)))      ; Number
 
 ;; Template rules used:
 ;; - compound: (make-bear x y angle)
 
+;; ListOfBear is one of:
+;; - empty
+;; - (cons Bear ListOfBear)
+;; interp. a list of bears
+
+(define LOB-1 empty)                ; empty
+(define LOB-2 (cons P-1 empty))     ; one bear
+(define LOB-3 (cons P-2 LOB-2))     ; two bears
+(define LOB-4 (cons P-3 LOB-3))     ; three bears
+#;
+(define (fn-for-lob lob)
+  (cond [(empty? lob) (...)]
+        [ else
+          (... (fn-for-bear(first lob))        ; bear
+               (fn-for-lob(rest lob)))]))      ; ListOfBear
 
 ;; =================
 ;; Functions:
 
-;; Bear -> Bear
-;; start the world with (main (make-bear (/ WIDTH 2) (/ HEIGHT 2) 0))
+;; ListOfBear -> ListOfBear
+;; start the world with (main LOB-1)
 ;; 
-(define (main p)
-  (big-bang p                            ; Bear
-            (on-tick   next-bear)        ; Bear -> Bear
-            (to-draw   render-bear)      ; Bear -> Image           
-            (on-mouse  mouse-hanlder)))  ; Bear Integer Integer MouseEvent -> Bear
+(define (main lob)
+  (big-bang lob                          ; ListOfBear
+            (on-tick   next-bear)        ; ListOfBear -> ListOfBear
+            (to-draw   render-bear)      ; ListOfBear -> Image           
+            (on-mouse  mouse-hanlder)))  ; ListOfBear Integer Integer MouseEvent -> ListOfBear
               
 
-;; Bear -> Bear
+;; ListOfBear -> ListOfBear
 ;; produce the next bear angle by adding 30
-(check-expect (next-bear (make-bear   0   0  30)) (make-bear 0 0     (rotate-img 30)))
-(check-expect (next-bear (make-bear 300 100 359)) (make-bear 300 100 (rotate-img 359)))
-;(define (next-bear p) P-1); stub
+(check-expect (next-bear LOB-1) empty)
+(check-expect (next-bear LOB-3) (cons (rotate-img  (make-bear 200 300  60)) (cons (rotate-img (make-bear 0 0 30)) empty)))
+(check-expect (next-bear LOB-4) (cons (rotate-img  (make-bear 100 500 359)) (cons (rotate-img (make-bear 200 300  60)) (cons (rotate-img (make-bear 0 0 30)) empty))))
+;(define (next-bear lob) LOB-1); stub
 
-(define (next-bear p)
-  (make-bear (bear-x p)(bear-y p)
-             (rotate-img (bear-angle p))
-  ))      
+(define (next-bear lob)
+  (cond [(empty? lob) empty]
+        [ else
+          (cons (rotate-img(first lob))        ; bear
+                (next-bear(rest lob)))]))      ; ListOfBear
 
-;; Number -> Number
+
+;; Bear -> Bear
 ;; Produce the next angle by adding ANGLE-INCREASE
-(check-expect (rotate-img 30 ) (+ 30 30))
-(check-expect (rotate-img 359) (- (+ 359 30) 360 ))
+(check-expect (rotate-img P-1 ) (make-bear   0   0 (+ 30 30)))
+(check-expect (rotate-img P-3)  (make-bear 100 500 (- (+ 359 30) 360 )))
 ;(define (rotate-img a) 0); stub
 
-(define(rotate-img a)
-  ( if (> (+ 30 a) 359)
-           (- (+ 30 a) 360)
-           (+ 30 a)
+(define(rotate-img b)
+  (make-bear (bear-x b)
+             (bear-y b)
+             (if (> (+ 30 (bear-angle b)) 359)
+                (- (+ 30 (bear-angle b)) 360)
+                (+ 30 (bear-angle b)))
        ))
 
+
+;; ListOfBear -> Image
+;; render all BEAR-IMGs in the provided list into its (x,y) postion on the MTS 
+(check-expect (render-bear LOB-1) MTS)
+(check-expect (render-bear LOB-2) (place-image (rotate-bear P-1) 0   0 MTS))
+(check-expect (render-bear LOB-3) (place-image
+                                   (rotate-bear P-2)
+                                   200 300
+                                   (place-image
+                                    (rotate-bear P-1)
+                                    0 0 
+                                    MTS))
+                                  )
+;(define (render-bear lob) MTS); stub
+
+(define (render-bear lob)
+  (cond [(empty? lob) MTS]
+        [ else
+          (place-image (rotate-bear (first lob))
+                (bear-x (first lob)) (bear-y (first lob))
+               (render-bear(rest lob)))]))
+
 ;; Bear -> Image
-;; render BEAR-IMG into (x,y) postion on the MTS 
-(check-expect (render-bear (make-bear 0 0      30)) (place-image (rotate 30  BEAR-IMG) 0   0   MTS))
-(check-expect (render-bear (make-bear 300 100 359)) (place-image (rotate 359 BEAR-IMG) 300 100 MTS))
-;(define (render-bear p) MTS); stub
+;; rotates BEAR-IMG by bear-angle
+(check-expect (rotate-bear P-1) (rotate 30  BEAR-IMG))
+(check-expect (rotate-bear P-3) (rotate 359 BEAR-IMG))
+;(define (rotate-bear b) MTS); stub
 
-(define (render-bear p)
-  (place-image (rotate (bear-angle p) BEAR-IMG) (bear-x p) (bear-y p) MTS))     
+(define (rotate-bear p)
+  (rotate (bear-angle p) BEAR-IMG))  
 
-;; Bear Integer Integer MouseEvent -> Bear
-;; clicking the mouse at a spot on the MTS will replace the old bear with a new bear at the new spot
-(check-expect (mouse-hanlder (make-bear 300 100 359) 500 100 "button-down") (make-bear 500 100 359))
-(check-expect (mouse-hanlder (make-bear 300 100 359) 500 100 "enter") (make-bear 300 100 359))
-;(define (mouse-hanlder p x y me) P-1); stub
 
-(define (mouse-hanlder p x y me)
-  ( cond [(mouse=? me "button-down") (make-bear x y(bear-angle p) )]
-        [else p]))   
+;; ListOfBear Integer Integer MouseEvent -> ListOfBear
+;; clicking the mouse at a spot on the MTS will create a new bear at the new spot that's upright it will be added to the listOfBear
+(check-expect (mouse-hanlder LOB-1 500 100 "button-down") (cons (make-bear 500 100 ANGLE) LOB-1))
+(check-expect (mouse-hanlder LOB-1 500 100 "enter") LOB-1)
+(check-expect (mouse-hanlder LOB-3 500 100 "button-down") (cons (make-bear 500 100 ANGLE) LOB-3))
+(check-expect (mouse-hanlder LOB-3 500 100 "enter") LOB-3)
+;(define (mouse-hanlder lob x y me) LOB-1); stub
+
+(define (mouse-hanlder lob x y me)
+  ( cond [(mouse=? me "button-down") (cons (make-bear x y ANGLE) lob)]
+         [else lob]))
 
 
 
