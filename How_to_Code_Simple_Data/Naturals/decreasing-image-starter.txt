@@ -1,0 +1,39 @@
+(require 2htdp/image)
+
+;; decreasing-image-starter.rkt
+
+;  PROBLEM:
+;  
+;  Design a function called decreasing-image that consumes a Natural n and produces an image of all the numbers 
+;  from n to 0 side by side. 
+;  
+;  So (decreasing-image 3) should produce .
+
+
+;; Constants
+(define N0 0)         ;0
+(define N1 (add1 N0)) ;1
+(define N2 (add1 N1)) ;2
+
+;; Natural -> Image
+;; Produce an image of all the numbers from n to 0 side by side
+(check-expect (decreasing-image 0 ) (text  (generate-string 0) 24 "olive"))
+(check-expect (decreasing-image N1) (text  (generate-string 1) 24 "olive"))
+(check-expect (decreasing-image N2) (text  (generate-string 2) 24 "olive"))
+;(define (decreasing-image n) (circle 30 "solid" "red")) ; stub
+
+(define (decreasing-image n)
+  (text (generate-string n) 24 "olive"))
+
+;; Natural -> String
+;; Produce a string of all the numbers from n to 0 side by side
+(check-expect (generate-string 0 )(string-append (number->string 0)))
+(check-expect (generate-string 1) (string-append (number->string 1) " " (number->string 0)))
+(check-expect (generate-string 2) (string-append (number->string 2) " " (number->string 1) " " (number->string 0)))
+;(define (generate-string n) ""); stub
+
+(define (generate-string n)
+  (cond [(zero? n) "0"]
+        [else
+         (string-append (number->string n) " "                    
+          (generate-string (sub1 n)))]))
