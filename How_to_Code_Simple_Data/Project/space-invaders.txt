@@ -8,6 +8,7 @@
 
 (define HEIGHT 500)
 (define WIDTH  300)
+(define MTS    (empty-scene WIDTH HEIGHT))
 
 (define TANK-x-SPEED 30)
 (define TANK-HEIGHT 30)
@@ -37,31 +38,99 @@
 ;; =================
 ;; Data definitions:
 
-;; WS is ... (give WS a better name)
+;; Tank-X is Integer[0, WIDTH]
+;; interp. tank x position in the MTS
 
+(define T0 0)           ; left edge
+(define T1 (/ WIDTH 2)) ; middle
+(define T2 WIDTH)       ; right edge
 
+(define (fn-for-tank-x tx)
+  (... tx))
+
+(define-struct fire (x y))
+;; Fire (make-fire Number Number)
+;; interp. a fire at position x, y
+
+(define FIRE-1 (make-fire 0 0))
+(define FIRE-2 (make-fire (/ HEIGHT 2) (/ WIDTH 2)))
+(define FIRE-3 (make-fire HEIGHT WIDTH))
+#;
+(define (fn-for-fire f)
+  (... (fire-x f)
+       (fire-y f)))
+
+;; ListOfFire is one of:
+;; - empty
+;; - (cons Fire ListOfFire)
+;; interp. a list of fire
+
+(define LOF-1 empty)
+(define LOF-2 (cons FIRE-1 empty))
+(define LOF-3 (cons FIRE-2 LOF-2))
+
+(define (fn-for-lof lof)
+  (cond [(empty? lof) (...)]
+        [ else
+          (... (fn-for-fire(first lof))     ; Fire
+               (fn-for-lof (rest  lof)))]))  ; ListOfFire
+
+(define-struct invader (x y angle))
+;; Invader is (make-invader Number Number Number)
+;; interp. an invader at position x, y and angle angle
+
+(define INVADER-1 (make-invader 0 0 45))
+(define INVADER-2 (make-invader (/ HEIGHT 2) (/ WIDTH 2) -45))
+(define INVADER-3 (make-invader HEIGHT WIDTH 45))
+#;
+(define (fn-for-invader i)
+  (... (invader-x i)(invader-y i)(invader-angle i)))
+
+;; ListOfInvader is one of:
+;; - empty
+;; - (cons Invader ListOfInvader)
+;; interp. a list of invaders
+
+(define LOI-1 empty)
+(define LOI-2 (cons INVADER-1 empty))
+(define LOI-3 (cons INVADER-2 LOI-2))
+
+(define (fn-for-loi loi)
+  (cond [(empty? loi) (...)]
+        [ else
+          (... (fn-for-invader(first loi))      ; Invader
+               (fn-for-loi(rest loi)))]))       ; ListOfInvader
 
 ;; =================
 ;; Functions:
 
-;; WS -> WS
-;; start the world with ...
+;; Tank-X ListOfFire ListOfInvader -> Tank-X ListOfFire ListOfInvader
+;; start the world with (main T1 empty empty)
 ;; 
-(define (main ws)
-  (big-bang ws                   ; WS
-    (on-tick   tock)     ; WS -> WS
-    (to-draw   render)   ; WS -> Image
-    (stop-when ...)      ; WS -> Boolean
-    (on-mouse  ...)      ; WS Integer Integer MouseEvent -> WS
-    (on-key    ...)))    ; WS KeyEvent -> WS
+(define (main tx lof loi)
+  (big-bang (tx lof loi)           ; Tank-X ListOfFire ListOfInvader
+    (on-tick   next-frame)         ; Tank-X ListOfFire ListOfInvader -> Tank-X ListOfFire ListOfInvader
+    (to-draw   render-behaviour)   ; Tank-X ListOfFire ListOfInvader -> Image
+    (stop-when end-game)           ; Tank-X ListOfFire ListOfInvader -> Boolean
+    (on-key    handle-key)))       ; Tank-X ListOfFire ListOfInvader KeyEvent -> Tank-X ListOfFire ListOfInvader
 
-;; WS -> WS
-;; produce the next ...
+;; Tank-X ListOfFire ListOfInvader -> Tank-X ListOfFire ListOfInvader
+;; produce the next tank, fire, invader positions
 ;; !!!
-(define (tock ws) ...)
+(define (next-frame tx lof loi) ...)
 
 
-;; WS -> Image
-;; render ... 
+;; Tank-X ListOfFire ListOfInvader -> Image
+;; render tank, fire , invader into x,y position of the MTS
 ;; !!!
-(define (render ws) ...)
+(define (render-behaviour tx lof loi) ...)
+
+;; Tank-X ListOfFire ListOfInvader -> Image
+;; Game over if invader reaches the bottom of the screen
+;; !!!
+(define (end-game tx lof loi) true); stub
+
+;; Tank-X ListOfFire ListOfInvader KeyEvent -> Tank-X ListOfFire ListOfInvader
+;; arrow key - tank moves right and left, space bar fire missiles
+;; !!!
+(define (handle-key tx lof loi ke) (tx lof loi)); stub
