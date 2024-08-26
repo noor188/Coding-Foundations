@@ -1,111 +1,107 @@
 (require 2htdp/image)
 (require 2htdp/universe)
 
-;; making-rain-filtered-starter.rkt
-
-; 
-; PROBLEM:
-; 
-; Design a simple interactive animation of rain falling down a screen. Wherever we click,
-; a rain drop should be created and as time goes by it should fall. Over time the drops
-; will reach the bottom of the screen and "fall off". You should filter these excess
-; drops out of the world state - otherwise your program is continuing to tick and
-; and draw them long after they are invisible.
-; 
-; In your design pay particular attention to the helper rules. In our solution we use
-; these rules to split out helpers:
-;   - function composition
-;   - reference
-;   - knowledge domain shift
-;   
-;   
-; NOTE: This is a fairly long problem.  While you should be getting more comfortable with 
-; world problems there is still a fair amount of work to do here. Our solution has 9
-; functions including main. If you find it is taking you too long then jump ahead to the
-; next homework problem and finish this later.
-; 
-; 
-
-
-;; Make it rain where we want it to.
+;; Make it rain where ever we want
 
 ;; =================
 ;; Constants:
 
-(define WIDTH  300)
 (define HEIGHT 300)
+(define WIDTH  600)
+(define MTS    (empty-scene WIDTH HEIGHT))
+(define DROP-IMG (overlay/offset
+                  (triangle 30 "solid" "light blue" )
+                  0 17
+                  (circle 15 "solid" "light blue")))
 
-(define SPEED 1)
 
-(define DROP (ellipse 4 8 "solid" "blue"))
-
-(define MTS (rectangle WIDTH HEIGHT "solid" "light blue"))
 
 ;; =================
 ;; Data definitions:
 
 (define-struct drop (x y))
-;; Drop is (make-drop Integer Integer)
-;; interp. A raindrop on the screen, with x and y coordinates.
+;; Drop is (make-drop Number Number)
+;; interp. a drop at position x, y
 
-(define D1 (make-drop 10 30))
-
+(define DROP-1 (make-drop (/ WIDTH 2) (/ HEIGHT 2) ))
+(define DROP-2 (make-drop 100          200))
 #;
 (define (fn-for-drop d)
-  (... (drop-x d) 
-       (drop-y d)))
+  (... (drop-x d)(drop-y d)))
 
-;; Template Rules used:
-;; - compound: 2 fields
-
-
-;; ListOfDrop is one of:
-;;  - empty
-;;  - (cons Drop ListOfDrop)
+;; ListOfDrop os one of:
+;; - empty
+;; - (cons Drop ListOfDrop)
 ;; interp. a list of drops
 
-(define LOD1 empty)
-(define LOD2 (cons (make-drop 10 20) (cons (make-drop 3 6) empty)))
-
+(define LOD-1 empty)
+(define LOD-2 (cons DROP-1 empty))
+(define LOD-3 (cons DROP-2 LOD-2))
 #;
-(define (fn-for-lod lod)
+(define (fn-for-LOD lod)
   (cond [(empty? lod) (...)]
-        [else
-         (... (fn-for-drop (first lod))
-              (fn-for-lod (rest lod)))]))
-
-;; Template Rules used:
-;; - one-of: 2 cases
-;; - atomic distinct: empty
-;; - compound: (cons Drop ListOfDrop)
-;; - reference: (first lod) is Drop
-;; - self reference: (rest lod) is ListOfDrop
+        [ else
+          (... (fn-for-drop(first lod))      ; Drop
+               (fn-for-LOD(rest lod)))]))   ; ListOfDrop
 
 ;; =================
 ;; Functions:
 
 ;; ListOfDrop -> ListOfDrop
-;; start rain program by evaluating (main empty)
+;; start the world with (main empty)
+;; 
 (define (main lod)
-  (big-bang lod
-            (on-mouse handle-mouse)   ; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
-            (on-tick  next-drops)     ; ListOfDrop -> ListOfDrop
-            (to-draw  render-drops))) ; ListOfDrop -> Image
-
-
-;; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
-;; if mevt is "button-down" add a new drop at that position
-;; !!!
-(define (handle-mouse lod x y mevt) empty) ; stub
-
-
+  (big-bang lod                  ; ListOfDrop
+    (on-tick   next-drop)        ; ListOfDrop -> ListOfDrop
+    (to-draw   draw-drop)        ; ListOfDrop -> Image
+    (on-mouse  mouse-handler)))  ; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
+       
 ;; ListOfDrop -> ListOfDrop
-;; produce filtered and ticked list of drops
-;; !!!
-(define (next-drops lod)empty) ; stub
+;; produce the next drops position in the list by adding 1 to drop-y and removes excess drops (drops reach the bottom of the screen) out of the screen 
+(check-expect (next-drop LOD-1) empty)
+(check-expect (next-drop (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) 1)) empty))
+(check-expect (next-drop (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 1)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) 1)) empty)))
+;(define (next-drop lod) lod); stub
 
+(define (next-drop lod)
+  (cond [(empty? lod) empty]
+        [ else
+          (cons (update-y(first lod))       ; Drop
+                (next-drop(rest lod)))]))   ; ListOfDrop
+
+;; Drop -> Drop
+;; Produce the next drop by adding 1 to y drop postion
+(check-expect (update-y (make-drop 100 200)) (make-drop 100 (+ 200 1)))
+(check-expect (update-y (make-drop   0   0)) (make-drop   0 (+   0 1)))
+;(define(update-y d) (make-drop 100 200)); stub
+
+(define (update-y d)
+  (make-drop (drop-x d)(+ (drop-y d) 1)))
 
 ;; ListOfDrop -> Image
-;; Render the drops onto MTS
+;; render all drops into it's (x,y) position in the MTS
+(check-expect (draw-drop empty) MTS)
+(check-expect (draw-drop (cons (make-drop (/ WIDTH 2)(/ HEIGHT 2) ) empty)) (place-image
+                                                                             DROP-IMG
+                                                                             (/ WIDTH 2) (/ HEIGHT 2)
+                                                                             MTS))
+(check-expect (draw-drop (cons (make-drop 100 200) (cons (make-drop (/ WIDTH 2)(/ HEIGHT 2) ) empty))) (place-image                                                                                                        
+                                                                                                        DROP-IMG
+                                                                                                        100 200                                                                                                        
+                                                                                                        (place-image
+                                                                                                         DROP-IMG
+                                                                                                         (/ WIDTH 2) (/ HEIGHT 2)                                                                                                         
+                                                                                                         MTS)))
+;(define (draw-drop lod) MTS); stub
+
+(define (draw-drop lod)
+  (cond [(empty? lod) MTS]
+        [ else
+          (place-image DROP-IMG
+                       (drop-x (first lod))(drop-y (first lod))                       
+                       (draw-drop  (rest lod)))]))   ; ListOfDrop
+
+;; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
+;; Creates a new drop at mouse (x,y) position and adds it to ListOfDrop
 ;; !!!
-(define (render-drops lod) MTS) ; stub
+(define (mouse-handler lod x y me) lod);
