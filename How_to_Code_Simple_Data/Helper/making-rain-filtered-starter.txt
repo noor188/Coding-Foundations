@@ -8,11 +8,11 @@
 
 (define HEIGHT 300)
 (define WIDTH  600)
-(define MTS    (empty-scene HEIGHT WIDTH))
+(define MTS    (empty-scene WIDTH HEIGHT))
 (define DROP-IMG (overlay/offset
-                                 (triangle 30 "solid" "light blue" )
-                                 0 17
-                                 (circle 15 "solid" "light blue")))
+                  (triangle 30 "solid" "light blue" )
+                  0 17
+                  (circle 15 "solid" "light blue")))
 
 
 
@@ -23,7 +23,7 @@
 ;; Drop is (make-drop Number Number)
 ;; interp. a drop at position x, y
 
-(define DROP-1 (make-drop (/ HEIGHT 2) (/ WIDTH 2)))
+(define DROP-1 (make-drop (/ WIDTH 2) (/ HEIGHT 2) ))
 (define DROP-2 (make-drop 100          200))
 #;
 (define (fn-for-drop d)
@@ -57,15 +57,49 @@
     (on-mouse  mouse-handler)))  ; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
        
 ;; ListOfDrop -> ListOfDrop
-;; produce the next drops position in the list by adding 1 to drop-y
-;; !!!
-(define (next-drop lod) lod)
+;; produce the next drops position in the list by adding 1 to drop-y and removes excess drops (drops reach the bottom of the screen) out of the screen 
+(check-expect (next-drop LOD-1) empty)
+(check-expect (next-drop (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) 1)) empty))
+(check-expect (next-drop (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 1)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) 1)) empty)))
+;(define (next-drop lod) lod); stub
 
+(define (next-drop lod)
+  (cond [(empty? lod) empty]
+        [ else
+          (cons (update-y(first lod))       ; Drop
+                (next-drop(rest lod)))]))   ; ListOfDrop
+
+;; Drop -> Drop
+;; Produce the next drop by adding 1 to y drop postion
+(check-expect (update-y (make-drop 100 200)) (make-drop 100 (+ 200 1)))
+(check-expect (update-y (make-drop   0   0)) (make-drop   0 (+   0 1)))
+;(define(update-y d) (make-drop 100 200)); stub
+
+(define (update-y d)
+  (make-drop (drop-x d)(+ (drop-y d) 1)))
 
 ;; ListOfDrop -> Image
 ;; render all drops into it's (x,y) position in the MTS
-;; !!!
-(define (draw-drop lod) MTS)
+(check-expect (draw-drop empty) MTS)
+(check-expect (draw-drop (cons (make-drop (/ WIDTH 2)(/ HEIGHT 2) ) empty)) (place-image
+                                                                             DROP-IMG
+                                                                             (/ WIDTH 2) (/ HEIGHT 2)
+                                                                             MTS))
+(check-expect (draw-drop (cons (make-drop 100 200) (cons (make-drop (/ WIDTH 2)(/ HEIGHT 2) ) empty))) (place-image                                                                                                        
+                                                                                                        DROP-IMG
+                                                                                                        100 200                                                                                                        
+                                                                                                        (place-image
+                                                                                                         DROP-IMG
+                                                                                                         (/ WIDTH 2) (/ HEIGHT 2)                                                                                                         
+                                                                                                         MTS)))
+;(define (draw-drop lod) MTS); stub
+
+(define (draw-drop lod)
+  (cond [(empty? lod) MTS]
+        [ else
+          (place-image DROP-IMG
+                       (drop-x (first lod))(drop-y (first lod))                       
+                       (draw-drop  (rest lod)))]))   ; ListOfDrop
 
 ;; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
 ;; Creates a new drop at mouse (x,y) position and adds it to ListOfDrop
