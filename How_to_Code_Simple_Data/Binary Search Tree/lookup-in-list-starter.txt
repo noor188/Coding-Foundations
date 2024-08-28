@@ -51,9 +51,13 @@
         [else  
          (if (equal-num? num (first accs)) 
               (account-name (first accs))              
-              (lookup (rest accs)))]))
+              (lookup (rest accs) num))]))
 
 ;; Natural account -> Boolean
 ;; Produce true if account number equals num
-;; !!!
-(define (equal-num? num acc) true);
+(check-expect (equal-num? 1 (make-account 1 "abc")) true)
+(check-expect (equal-num? 1 (make-account 2 "abc")) false)
+;(define (equal-num? num acc) true);stub
+
+(define (equal-num? num acc)
+  (= num (account-num acc)))
