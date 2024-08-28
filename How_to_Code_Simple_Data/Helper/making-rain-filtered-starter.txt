@@ -15,7 +15,6 @@
                   (circle 15 "solid" "light blue")))
 
 
-
 ;; =================
 ;; Data definitions:
 
@@ -103,5 +102,16 @@
 
 ;; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
 ;; Creates a new drop at mouse (x,y) position and adds it to ListOfDrop
-;; !!!
-(define (mouse-handler lod x y me) lod);
+(check-expect (mouse-handler empty 300 100 "button-down") (cons (make-drop 300 100) empty))
+(check-expect (mouse-handler empty 300 100 "enter"      ) empty)
+(check-expect (mouse-handler (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty) 200 50 "button-down") (cons (make-drop 200 50) (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty)))
+(check-expect (mouse-handler (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty) 200 50 "enter") (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty))
+(check-expect (mouse-handler (cons (make-drop 100 200) (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty)) 150 150 "button-down") (cons (make-drop 150 150) (cons (make-drop 100 200) (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty))))
+(check-expect (mouse-handler (cons (make-drop 100 200) (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty)) 150 150 "enter"      ) (cons (make-drop 100 200) (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty)))
+;(define (mouse-handler lod x y me) lod);
+
+(define (mouse-handler lod x y me)
+  (cond [(mouse=? me "button-down") (cons (make-drop x y) lod)]
+        [else
+         lod]))  
+
