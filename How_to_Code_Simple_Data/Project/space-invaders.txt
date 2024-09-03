@@ -14,7 +14,8 @@
 (define TANK-HEIGHT 30)
 (define TANK-Y (- HEIGHT (/ TANK-HEIGHT 2)))
 
-(define INVADER-ANGLE 45)
+(define INVADER-ANGLE-45 315)
+(define INVADER-ANGLE-MINUS-45 225)
 (define INVADER-X-SPEED 30)
 (define INVADER-Y-SPEED 30)
 
@@ -67,7 +68,7 @@
 
 (define LOF-1 empty)
 (define LOF-2 (cons FIRE-1 empty))
-(define LOF-3 (cons FIRE-2 LOF-2))
+(define LOF-3 (cons FIRE-2 empty))
 
 (define (fn-for-lof lof)
   (cond [(empty? lof) (...)]
@@ -93,7 +94,7 @@
 
 (define LOI-1 empty)
 (define LOI-2 (cons INVADER-1 empty))
-(define LOI-3 (cons INVADER-2 LOI-2))
+(define LOI-3 (cons INVADER-2 empty))
 
 (define (fn-for-loi loi)
   (cond [(empty? loi) (...)]
@@ -101,36 +102,65 @@
           (... (fn-for-invader(first loi))      ; Invader
                (fn-for-loi(rest loi)))]))       ; ListOfInvader
 
+(define-struct game (tx lof loi))
+;; Game is (make-game game)
+;; interp. a game with
+;;                tx:  tank x position on the MTS
+;;                lof: a list for the fire balls at (x,y) on MTS
+;;                loi: a list of invaders at (x,y) postion and angle
+
+(define GAME-1 (make-game T0 LOF-1 LOI-1))
+(define GAME-2 (make-game T1 LOF-2 LOI-2))
+(define GAME-3 (make-game T2 LOF-3 LOI-3))
+#;
+(define (fn-for-game g)
+  (... (game-tx g)(game-lof g)(game-loi g)))
+
 ;; =================
 ;; Functions:
 
-;; Tank-X ListOfFire ListOfInvader -> Tank-X ListOfFire ListOfInvader
-;; start the world with (main T1 empty empty)
+;; game -> game
+;; start the world with (main (make-game T1 empty empty))
 ;; 
-(define (main tx lof loi)
-  (big-bang (tx lof loi)           ; Tank-X ListOfFire ListOfInvader
-    (on-tick   next-frame)         ; Tank-X ListOfFire ListOfInvader -> Tank-X ListOfFire ListOfInvader
-    (to-draw   render-behaviour)   ; Tank-X ListOfFire ListOfInvader -> Image
-    (stop-when end-game)           ; Tank-X ListOfFire ListOfInvader -> Boolean
-    (on-key    handle-key)))       ; Tank-X ListOfFire ListOfInvader KeyEvent -> Tank-X ListOfFire ListOfInvader
+(define (main g)
+  (big-bang g                      ; game
+    (on-tick   next-frame)         ; game -> game
+    (to-draw   render-behaviour)   ; game -> Image
+    (stop-when end-game)           ; game -> Boolean
+    (on-key    handle-key)))       ; game KeyEvent -> game
 
-;; Tank-X ListOfFire ListOfInvader -> Tank-X ListOfFire ListOfInvader
-;; produce the next tank, fire, invader positions
+;; game -> game
+;; produce the next game status -> fire (- FIRE-SPEED), invader positions
+(check-expect (next-frame (make-game (/ WIDTH 2) (cons (make-fire 100 150) empty) (cons (make-invader 100 150 INVADER-ANGLE-45) empty))) (make-game (/ WIDTH 2) (cons (make-fire 100 (- 150 FIRE-SPEED)) empty) (cons (make-invader (+ 100 INVADER-X-SPEED) (+ 0 INVADER-Y-SPEED) INVADER-ANGLE-45 ) empty)))
+(check-expect (next-frame (make-game 150 (cons (make-fire 50 200) empty) (cons (make-invader 300 3 INVADER-ANGLE-MINUS-45) empty))) (make-game 150 (cons (make-fire 50 (- 200 FIRE-SPEED)) empty) (cons (make-invader (- 100 INVADER-X-SPEED) (+ 0 INVADER-Y-SPEED) INVADER-ANGLE-45 ) empty)))
+;(define (next-frame g) GAME-1); stub
+
+(define (next-frame g)
+  (make-game (game-tx g) (update-fire(game-lof g))(update-invader(game-loi g))))
+
+
+;; ListOfFire -> ListOfFire
+;; update all the fires positions by subtracting fire-x position by FIRE-SPEED
 ;; !!!
-(define (next-frame tx lof loi) ...)
+(define (update-fire lof) lof); stub
 
-
-;; Tank-X ListOfFire ListOfInvader -> Image
-;; render tank, fire , invader into x,y position of the MTS
+;; ListOfinvader -> ListOfInvder
+;; update the invader position (x, y, angle)
 ;; !!!
-(define (render-behaviour tx lof loi) ...)
+(define (update-invader loi) loi); stub
 
-;; Tank-X ListOfFire ListOfInvader -> Image
+
+;; game -> Image
+;; render tank, fire , invader into x,y position on the MTS
+;; !!!
+(define (render-behaviour g) MTS)
+
+;; game -> boolean
 ;; Game over if invader reaches the bottom of the screen
 ;; !!!
-(define (end-game tx lof loi) true); stub
+(define (end-game g) true); stub
 
-;; Tank-X ListOfFire ListOfInvader KeyEvent -> Tank-X ListOfFire ListOfInvader
+;; game KeyEvent -> game
 ;; arrow key - tank moves right and left, space bar fire missiles
 ;; !!!
-(define (handle-key tx lof loi ke) (tx lof loi)); stub
+(define (handle-key g ke) GAME-1); stub
