@@ -9,11 +9,11 @@
 (define HEIGHT 300)
 (define WIDTH  600)
 (define MTS    (empty-scene WIDTH HEIGHT))
+(define FALL-OFF-VALUE 30)
 (define DROP-IMG (overlay/offset
-                  (triangle 30 "solid" "light blue" )
+                  (triangle FALL-OFF-VALUE "solid" "light blue" )
                   0 17
                   (circle 15 "solid" "light blue")))
-
 
 
 ;; =================
@@ -29,7 +29,7 @@
 (define (fn-for-drop d)
   (... (drop-x d)(drop-y d)))
 
-;; ListOfDrop os one of:
+;; ListOfDrop is one of:
 ;; - empty
 ;; - (cons Drop ListOfDrop)
 ;; interp. a list of drops
@@ -66,8 +66,27 @@
 (define (next-drop lod)
   (cond [(empty? lod) empty]
         [ else
-          (cons (update-y(first lod))       ; Drop
-                (next-drop(rest lod)))]))   ; ListOfDrop
+          (if (remove-drop(update-y(first lod)))       
+              (next-drop(rest lod))
+              (cons (update-y(first lod)) (next-drop(rest lod))))]))      
+
+;; Drop -> Boolean
+;; Returns true if the drop reached the bottom of the screen
+(check-expect (remove-drop (make-drop 40 HEIGHT)) false)
+(check-expect (remove-drop (make-drop 40 (+ HEIGHT FALL-OFF-VALUE))) true)
+;(define (remove-drop lod) true); stub
+
+(define (remove-drop d)
+  (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
+
+;; Drop -> Boolean
+;; Return True if the drop fall off the screen, (+ HEIGHT FALL-OFF-VALUE)
+(check-expect (fallen-off-drop (make-drop 40 50 )) false)
+(check-expect (fallen-off-drop (make-drop 40 (+ HEIGHT FALL-OFF-VALUE) )) true)
+;(define (fallen-off-drop d) true); stub
+
+(define (fallen-off-drop d)
+  (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
 
 ;; Drop -> Drop
 ;; Produce the next drop by adding 1 to y drop postion
@@ -103,5 +122,16 @@
 
 ;; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
 ;; Creates a new drop at mouse (x,y) position and adds it to ListOfDrop
-;; !!!
-(define (mouse-handler lod x y me) lod);
+(check-expect (mouse-handler empty 300 100 "button-down") (cons (make-drop 300 100) empty))
+(check-expect (mouse-handler empty 300 100 "enter"      ) empty)
+(check-expect (mouse-handler (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty) 200 50 "button-down") (cons (make-drop 200 50) (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty)))
+(check-expect (mouse-handler (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty) 200 50 "enter") (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty))
+(check-expect (mouse-handler (cons (make-drop 100 200) (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty)) 150 150 "button-down") (cons (make-drop 150 150) (cons (make-drop 100 200) (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty))))
+(check-expect (mouse-handler (cons (make-drop 100 200) (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty)) 150 150 "enter"      ) (cons (make-drop 100 200) (cons (make-drop (/ WIDTH 2) (/ HEIGHT 2) ) empty)))
+;(define (mouse-handler lod x y me) lod);
+
+(define (mouse-handler lod x y me)
+  (cond [(mouse=? me "button-down") (cons (make-drop x y) lod)]
+        [else
+         lod]))  
+
