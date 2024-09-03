@@ -112,6 +112,7 @@
 (define GAME-1 (make-game T0 LOF-1 LOI-1))
 (define GAME-2 (make-game T1 LOF-2 LOI-2))
 (define GAME-3 (make-game T2 LOF-3 LOI-3))
+
 #;
 (define (fn-for-game g)
   (... (game-tx g)(game-lof g)(game-loi g)))
@@ -148,7 +149,6 @@
 ;; update the invader position (x, y, angle)
 ;; !!!
 (define (update-invader loi) loi); stub
-
 
 ;; game -> Image
 ;; render tank, fire , invader into x,y position on the MTS
