@@ -10,6 +10,7 @@
 (define WIDTH  600)
 (define MTS    (empty-scene WIDTH HEIGHT))
 (define FALL-OFF-VALUE 30)
+(define SPEED 1)
 (define DROP-IMG (overlay/offset
                   (triangle FALL-OFF-VALUE "solid" "light blue" )
                   0 17
@@ -58,17 +59,12 @@
        
 ;; ListOfDrop -> ListOfDrop
 ;; produce the next drops position in the list by adding 1 to drop-y and removes excess drops (drops reach the bottom of the screen) out of the screen 
-(check-expect (next-drop LOD-1) empty)
-(check-expect (next-drop (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) 1)) empty))
-(check-expect (next-drop (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 1)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) 1)) empty)))
+(check-expect (next-drop (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) SPEED)) empty))
+(check-expect (next-drop (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) SPEED)) empty)))
 ;(define (next-drop lod) lod); stub
 
 (define (next-drop lod)
-  (cond [(empty? lod) empty]
-        [ else
-          (if (remove-drop(update-y(first lod)))       
-              (next-drop(rest lod))
-              (cons (update-y(first lod)) (next-drop(rest lod))))]))      
+  (remove-drop(tick-drops lod)))
 
 ;; Drop -> Boolean
 ;; Returns true if the drop reached the bottom of the screen
@@ -88,14 +84,26 @@
 (define (fallen-off-drop d)
   (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
 
+;; ListOfDrop -> ListOfDrop
+;; Produce the next drop by adding SPEED to y drop position
+(check-expect (tick-drops  empty) empty)
+(check-expect (tick-drops (cons (make-drop 100 200) empty)) (cons (make-drop 100 (+ 200 SPEED)) empty))
+(check-expect (tick-drops (cons (make-drop 100 200) (cons (make-drop   0   0) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop   0   (+ 0 SPEED)) empty)))
+;(define(tick-drops d) (make-drop 100 200)); stub
+
+(define (tick-drops lod)
+  (cond [(empty? lod) empty]
+        [ else
+          (cons(update-y  (first lod))        ; Drop
+               (tick-drops(rest lod)))]))   ; ListOfDrop
 ;; Drop -> Drop
-;; Produce the next drop by adding 1 to y drop postion
-(check-expect (update-y (make-drop 100 200)) (make-drop 100 (+ 200 1)))
-(check-expect (update-y (make-drop   0   0)) (make-drop   0 (+   0 1)))
-;(define(update-y d) (make-drop 100 200)); stub
+;; Updates the y position of drop
+(check-expect (update-y (make-drop 0 0))    (make-drop 0 (+ 0   SPEED)))
+(check-expect (update-y (make-drop 50 200)) (make-drop 50 (+ 200 SPEED)))
+;(define (update-y d) d); stub
 
 (define (update-y d)
-  (make-drop (drop-x d)(+ (drop-y d) 1)))
+  (make-drop (drop-x d)(+ (drop-y d) SPEED)))
 
 ;; ListOfDrop -> Image
 ;; render all drops into it's (x,y) position in the MTS
