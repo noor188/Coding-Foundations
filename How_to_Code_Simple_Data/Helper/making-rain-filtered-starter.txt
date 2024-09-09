@@ -53,11 +53,36 @@
 ;; 
 (define (main lod)
   (big-bang lod                  ; ListOfDrop
-    (on-tick   next-drop)        ; ListOfDrop -> ListOfDrop
+    (on-tick   next-drops)        ; ListOfDrop -> ListOfDrop
     (to-draw   draw-drop)        ; ListOfDrop -> Image
     (on-mouse  mouse-handler)))  ; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
        
 ;; ListOfDrop -> ListOfDrop
+<<<<<<< HEAD
+;; Produce the next position for every drop in the list and then removes excess drops 
+(check-expect (next-drops (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) SPEED)) empty))
+(check-expect (next-drops (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) SPEED)) empty)))
+;(define (next-drops lod) lod); stub
+
+(define (next-drops lod)
+  (onscreen-only(tick-drops lod)))
+
+;; ListOfDrop -> ListOfDrop
+;; Update the list of drops by removing excess drops (fall of the screen)
+(check-expect (onscreen-only empty) empty)
+(check-expect (onscreen-only (cons (make-drop (/ HEIGHT 2) (+ HEIGHT FALL-OFF-VALUE)) empty)) empty)
+(check-expect (onscreen-only (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))
+(check-expect (onscreen-only (cons (make-drop 40 100 ) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 40 100 ) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)))
+(check-expect (onscreen-only (cons (make-drop 40 (+ HEIGHT FALL-OFF-VALUE) ) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))
+;(define (onscreen-only lod) lod); stub
+
+(define (onscreen-only lod)
+  (cond [(empty? lod) empty]
+        [ else
+          (if (fallen-off-drop(first lod))
+              (onscreen-only(rest lod))
+              (cons (first lod)(onscreen-only(rest lod))))]))   ; ListOfDrop
+=======
 ;; produce the next drops position in the list by adding 1 to drop-y and removes excess drops (drops reach the bottom of the screen) out of the screen 
 (check-expect (next-drop (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) SPEED)) empty))
 (check-expect (next-drop (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) SPEED)) empty)))
@@ -74,6 +99,7 @@
 
 (define (remove-drop d)
   (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
+>>>>>>> 06177b7a25af994c598230e4a7db1234db035228
 
 ;; Drop -> Boolean
 ;; Return True if the drop fall off the screen, (+ HEIGHT FALL-OFF-VALUE)
@@ -85,7 +111,11 @@
   (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
 
 ;; ListOfDrop -> ListOfDrop
+<<<<<<< HEAD
+;; Produce the next drop by adding SPEED to y position
+=======
 ;; Produce the next drop by adding SPEED to y drop position
+>>>>>>> 06177b7a25af994c598230e4a7db1234db035228
 (check-expect (tick-drops  empty) empty)
 (check-expect (tick-drops (cons (make-drop 100 200) empty)) (cons (make-drop 100 (+ 200 SPEED)) empty))
 (check-expect (tick-drops (cons (make-drop 100 200) (cons (make-drop   0   0) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop   0   (+ 0 SPEED)) empty)))
