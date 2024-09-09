@@ -58,6 +58,7 @@
     (on-mouse  mouse-handler)))  ; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
        
 ;; ListOfDrop -> ListOfDrop
+<<<<<<< HEAD
 ;; Produce the next position for every drop in the list and then removes excess drops 
 (check-expect (next-drops (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) SPEED)) empty))
 (check-expect (next-drops (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) SPEED)) empty)))
@@ -81,6 +82,24 @@
           (if (fallen-off-drop(first lod))
               (onscreen-only(rest lod))
               (cons (first lod)(onscreen-only(rest lod))))]))   ; ListOfDrop
+=======
+;; produce the next drops position in the list by adding 1 to drop-y and removes excess drops (drops reach the bottom of the screen) out of the screen 
+(check-expect (next-drop (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) SPEED)) empty))
+(check-expect (next-drop (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) SPEED)) empty)))
+;(define (next-drop lod) lod); stub
+
+(define (next-drop lod)
+  (remove-drop(tick-drops lod)))
+
+;; Drop -> Boolean
+;; Returns true if the drop reached the bottom of the screen
+(check-expect (remove-drop (make-drop 40 HEIGHT)) false)
+(check-expect (remove-drop (make-drop 40 (+ HEIGHT FALL-OFF-VALUE))) true)
+;(define (remove-drop lod) true); stub
+
+(define (remove-drop d)
+  (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
+>>>>>>> 06177b7a25af994c598230e4a7db1234db035228
 
 ;; Drop -> Boolean
 ;; Return True if the drop fall off the screen, (+ HEIGHT FALL-OFF-VALUE)
@@ -92,7 +111,11 @@
   (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
 
 ;; ListOfDrop -> ListOfDrop
+<<<<<<< HEAD
 ;; Produce the next drop by adding SPEED to y position
+=======
+;; Produce the next drop by adding SPEED to y drop position
+>>>>>>> 06177b7a25af994c598230e4a7db1234db035228
 (check-expect (tick-drops  empty) empty)
 (check-expect (tick-drops (cons (make-drop 100 200) empty)) (cons (make-drop 100 (+ 200 SPEED)) empty))
 (check-expect (tick-drops (cons (make-drop 100 200) (cons (make-drop   0   0) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop   0   (+ 0 SPEED)) empty)))
