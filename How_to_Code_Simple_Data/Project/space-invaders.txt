@@ -14,7 +14,8 @@
 (define TANK-HEIGHT 30)
 (define TANK-Y (- HEIGHT (/ TANK-HEIGHT 2)))
 
-(define INVADER-ANGLE 45)
+(define INVADER-ANGLE-45 315)
+(define INVADER-ANGLE-MINUS-45 225)
 (define INVADER-X-SPEED 30)
 (define INVADER-Y-SPEED 30)
 
@@ -68,7 +69,7 @@
 (define LOF-1 empty)
 (define LOF-2 (cons FIRE-1 empty))
 (define LOF-3 (cons FIRE-2 LOF-2))
-
+#;
 (define (fn-for-lof lof)
   (cond [(empty? lof) (...)]
         [ else
@@ -93,7 +94,7 @@
 
 (define LOI-1 empty)
 (define LOI-2 (cons INVADER-1 empty))
-(define LOI-3 (cons INVADER-2 LOI-2))
+(define LOI-3 (cons INVADER-2 empty))
 
 (define (fn-for-loi loi)
   (cond [(empty? loi) (...)]
@@ -111,7 +112,7 @@
 (define GAME-1 (make-game T0 LOF-1 LOI-1))
 (define GAME-2 (make-game T1 LOF-2 LOI-2))
 (define GAME-3 (make-game T2 LOF-3 LOI-3))
-
+#;
 (define (fn-for-game g)
   (... (game-tx g)(game-lof g)(game-loi g)))
 
@@ -129,9 +130,46 @@
     (on-key    handle-key)))       ; game KeyEvent -> game
 
 ;; game -> game
-;; produce the next tank, fire, invader positions
+;; produce the next game status -> fire (- FIRE-SPEED), invader positions
+(check-expect (next-frame (make-game (/ WIDTH 2) (cons (make-fire 100 150) empty) (cons (make-invader 100 150 INVADER-ANGLE-45) empty))) (make-game (/ WIDTH 2) (cons (make-fire 100 (- 150 FIRE-SPEED)) empty) (cons (make-invader (+ 100 INVADER-X-SPEED) (+ 0 INVADER-Y-SPEED) INVADER-ANGLE-45 ) empty)))
+(check-expect (next-frame (make-game 150 (cons (make-fire 50 200) empty) (cons (make-invader 300 3 INVADER-ANGLE-MINUS-45) empty))) (make-game 150 (cons (make-fire 50 (- 200 FIRE-SPEED)) empty) (cons (make-invader (- 100 INVADER-X-SPEED) (+ 0 INVADER-Y-SPEED) INVADER-ANGLE-45 ) empty)))
+;(define (next-frame g) GAME-1); stub
+
+(define (next-frame g)
+  (make-game (game-tx g) (update-fire(game-lof g))(update-invader(game-loi g))))
+
+
+;; ListOfFire -> ListOfFire
+;; Produce the next list fires (updates postion, remove excess fires)
+(check-expect (update-fire empty) empty)
+(check-expect (update-fire (cons (make-fire 0 0) empty)) (cons (make-fire (- 0 FIRE-SPEED) 0) empty))
+(check-expect (update-fire (cons (make-fire (/ HEIGHT 2) (/ WIDTH 2)) (cons (make-fire 0 0) empty))) (cons (make-fire (- (/ HEIGHT 2) FIRE-SPEED) (/ WIDTH 2)) (cons (make-fire (- 0 FIRE-SPEED) 0) empty)))
+;(define (update-fire lof) lof); stub
+
+(define (update-fire lof)
+  (onscreen-fire(update-x-fires lof)))  ; ListOfFire
+
+;; ListOfFire -> ListOfFire
+;; Update fires in the list by subtracting fire-x by FIRE-SPEED
+;; !!!  but first add one test to update-fire where the fire passed the screen (should be removed) 
+(define (update-x-fires lof) lof); stub
+
+;; ListOfFire -> ListOfFire
+;; Remove excess fires from the list (passed the screen)
 ;; !!!
-(define (next-frame g) GAME-1)
+(define (onscreen-fire lof) lof); stub
+
+#; 
+(define (update-fire lof)
+  (cond [(empty? lof) empty]
+        [ else
+          (cons (update-x-fire(first lof))     ; Fire
+                (update-fire(rest  lof)))]))  ; ListOfFire
+
+;; ListOfinvader -> ListOfInvder
+;; update the invader position (x, y, angle)
+;; !!!
+(define (update-invader loi) loi); stub
 
 
 ;; game -> Image
