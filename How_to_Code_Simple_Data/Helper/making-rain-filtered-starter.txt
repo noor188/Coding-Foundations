@@ -58,7 +58,6 @@
     (on-mouse  mouse-handler)))  ; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
        
 ;; ListOfDrop -> ListOfDrop
-<<<<<<< HEAD
 ;; Produce the next position for every drop in the list and then removes excess drops 
 (check-expect (next-drops (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) SPEED)) empty))
 (check-expect (next-drops (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) SPEED)) empty)))
@@ -79,43 +78,21 @@
 (define (onscreen-only lod)
   (cond [(empty? lod) empty]
         [ else
-          (if (fallen-off-drop(first lod))
+          (if (not-onscreen?(first lod))
               (onscreen-only(rest lod))
               (cons (first lod)(onscreen-only(rest lod))))]))   ; ListOfDrop
-=======
-;; produce the next drops position in the list by adding 1 to drop-y and removes excess drops (drops reach the bottom of the screen) out of the screen 
-(check-expect (next-drop (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) SPEED)) empty))
-(check-expect (next-drop (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) SPEED)) empty)))
-;(define (next-drop lod) lod); stub
-
-(define (next-drop lod)
-  (remove-drop(tick-drops lod)))
-
-;; Drop -> Boolean
-;; Returns true if the drop reached the bottom of the screen
-(check-expect (remove-drop (make-drop 40 HEIGHT)) false)
-(check-expect (remove-drop (make-drop 40 (+ HEIGHT FALL-OFF-VALUE))) true)
-;(define (remove-drop lod) true); stub
-
-(define (remove-drop d)
-  (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
->>>>>>> 06177b7a25af994c598230e4a7db1234db035228
 
 ;; Drop -> Boolean
 ;; Return True if the drop fall off the screen, (+ HEIGHT FALL-OFF-VALUE)
-(check-expect (fallen-off-drop (make-drop 40 50 )) false)
-(check-expect (fallen-off-drop (make-drop 40 (+ HEIGHT FALL-OFF-VALUE) )) true)
-;(define (fallen-off-drop d) true); stub
+(check-expect (not-onscreen? (make-drop 40 50 )) false)
+(check-expect (not-onscreen? (make-drop 40 (+ HEIGHT FALL-OFF-VALUE) )) true)
+;(define (not-onscreen? d) true); stub
 
-(define (fallen-off-drop d)
+(define (not-onscreen? d)
   (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
 
 ;; ListOfDrop -> ListOfDrop
-<<<<<<< HEAD
 ;; Produce the next drop by adding SPEED to y position
-=======
-;; Produce the next drop by adding SPEED to y drop position
->>>>>>> 06177b7a25af994c598230e4a7db1234db035228
 (check-expect (tick-drops  empty) empty)
 (check-expect (tick-drops (cons (make-drop 100 200) empty)) (cons (make-drop 100 (+ 200 SPEED)) empty))
 (check-expect (tick-drops (cons (make-drop 100 200) (cons (make-drop   0   0) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop   0   (+ 0 SPEED)) empty)))
@@ -154,10 +131,23 @@
 (define (draw-drop lod)
   (cond [(empty? lod) MTS]
         [ else
-          (place-image DROP-IMG
-                       (drop-x (first lod))(drop-y (first lod))                       
+          (place-drop  (first lod)                        
                        (draw-drop  (rest lod)))]))   ; ListOfDrop
 
+;; Drop Image -> Image
+;; place drop on img as specified by d
+(check-expect (place-drop (make-drop 100 30) MTS) (place-image DROP-IMG
+                                                               100 30
+                                                               MTS))
+;(define (place-drop d img) MTS); stub
+
+(define (place-drop d img)
+  (place-image DROP-IMG
+               (drop-x d)(drop-y d)
+               img))
+
+
+;; DROP-IMG (drop-x (first lod))(drop-y (first lod))
 ;; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
 ;; Creates a new drop at mouse (x,y) position and adds it to ListOfDrop
 (check-expect (mouse-handler empty 300 100 "button-down") (cons (make-drop 300 100) empty))
