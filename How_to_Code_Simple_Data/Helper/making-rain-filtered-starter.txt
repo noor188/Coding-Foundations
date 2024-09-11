@@ -10,6 +10,7 @@
 (define WIDTH  600)
 (define MTS    (empty-scene WIDTH HEIGHT))
 (define FALL-OFF-VALUE 30)
+(define SPEED 1)
 (define DROP-IMG (overlay/offset
                   (triangle FALL-OFF-VALUE "solid" "light blue" )
                   0 17
@@ -52,50 +53,64 @@
 ;; 
 (define (main lod)
   (big-bang lod                  ; ListOfDrop
-    (on-tick   next-drop)        ; ListOfDrop -> ListOfDrop
+    (on-tick   next-drops)        ; ListOfDrop -> ListOfDrop
     (to-draw   draw-drop)        ; ListOfDrop -> Image
     (on-mouse  mouse-handler)))  ; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
        
 ;; ListOfDrop -> ListOfDrop
-;; produce the next drops position in the list by adding 1 to drop-y and removes excess drops (drops reach the bottom of the screen) out of the screen 
-(check-expect (next-drop LOD-1) empty)
-(check-expect (next-drop (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) 1)) empty))
-(check-expect (next-drop (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 1)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) 1)) empty)))
-;(define (next-drop lod) lod); stub
+;; Produce the next position for every drop in the list and then removes excess drops 
+(check-expect (next-drops (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (+ (/ WIDTH 2) SPEED)) empty))
+(check-expect (next-drops (cons (make-drop 100 200) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop (/ HEIGHT 2) (+(/ WIDTH 2) SPEED)) empty)))
+;(define (next-drops lod) lod); stub
 
-(define (next-drop lod)
+(define (next-drops lod)
+  (onscreen-only(tick-drops lod)))
+
+;; ListOfDrop -> ListOfDrop
+;; Update the list of drops by removing excess drops (fall of the screen)
+(check-expect (onscreen-only empty) empty)
+(check-expect (onscreen-only (cons (make-drop (/ HEIGHT 2) (+ HEIGHT FALL-OFF-VALUE)) empty)) empty)
+(check-expect (onscreen-only (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))
+(check-expect (onscreen-only (cons (make-drop 40 100 ) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop 40 100 ) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty)))
+(check-expect (onscreen-only (cons (make-drop 40 (+ HEIGHT FALL-OFF-VALUE) ) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))) (cons (make-drop (/ HEIGHT 2) (/ WIDTH 2)) empty))
+;(define (onscreen-only lod) lod); stub
+
+(define (onscreen-only lod)
   (cond [(empty? lod) empty]
         [ else
-          (if (remove-drop(update-y(first lod)))       
-              (next-drop(rest lod))
-              (cons (update-y(first lod)) (next-drop(rest lod))))]))      
-
-;; Drop -> Boolean
-;; Returns true if the drop reached the bottom of the screen
-(check-expect (remove-drop (make-drop 40 HEIGHT)) false)
-(check-expect (remove-drop (make-drop 40 (+ HEIGHT FALL-OFF-VALUE))) true)
-;(define (remove-drop lod) true); stub
-
-(define (remove-drop d)
-  (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
+          (if (not-onscreen?(first lod))
+              (onscreen-only(rest lod))
+              (cons (first lod)(onscreen-only(rest lod))))]))   ; ListOfDrop
 
 ;; Drop -> Boolean
 ;; Return True if the drop fall off the screen, (+ HEIGHT FALL-OFF-VALUE)
-(check-expect (fallen-off-drop (make-drop 40 50 )) false)
-(check-expect (fallen-off-drop (make-drop 40 (+ HEIGHT FALL-OFF-VALUE) )) true)
-;(define (fallen-off-drop d) true); stub
+(check-expect (not-onscreen? (make-drop 40 50 )) false)
+(check-expect (not-onscreen? (make-drop 40 (+ HEIGHT FALL-OFF-VALUE) )) true)
+;(define (not-onscreen? d) true); stub
 
-(define (fallen-off-drop d)
+(define (not-onscreen? d)
   (= (drop-y d) (+ HEIGHT FALL-OFF-VALUE)))
 
+;; ListOfDrop -> ListOfDrop
+;; Produce the next drop by adding SPEED to y position
+(check-expect (tick-drops  empty) empty)
+(check-expect (tick-drops (cons (make-drop 100 200) empty)) (cons (make-drop 100 (+ 200 SPEED)) empty))
+(check-expect (tick-drops (cons (make-drop 100 200) (cons (make-drop   0   0) empty))) (cons (make-drop 100 (+ 200 SPEED)) (cons (make-drop   0   (+ 0 SPEED)) empty)))
+;(define(tick-drops d) (make-drop 100 200)); stub
+
+(define (tick-drops lod)
+  (cond [(empty? lod) empty]
+        [ else
+          (cons(update-y  (first lod))        ; Drop
+               (tick-drops(rest lod)))]))   ; ListOfDrop
 ;; Drop -> Drop
-;; Produce the next drop by adding 1 to y drop postion
-(check-expect (update-y (make-drop 100 200)) (make-drop 100 (+ 200 1)))
-(check-expect (update-y (make-drop   0   0)) (make-drop   0 (+   0 1)))
-;(define(update-y d) (make-drop 100 200)); stub
+;; Updates the y position of drop
+(check-expect (update-y (make-drop 0 0))    (make-drop 0 (+ 0   SPEED)))
+(check-expect (update-y (make-drop 50 200)) (make-drop 50 (+ 200 SPEED)))
+;(define (update-y d) d); stub
 
 (define (update-y d)
-  (make-drop (drop-x d)(+ (drop-y d) 1)))
+  (make-drop (drop-x d)(+ (drop-y d) SPEED)))
 
 ;; ListOfDrop -> Image
 ;; render all drops into it's (x,y) position in the MTS
@@ -116,10 +131,23 @@
 (define (draw-drop lod)
   (cond [(empty? lod) MTS]
         [ else
-          (place-image DROP-IMG
-                       (drop-x (first lod))(drop-y (first lod))                       
+          (place-drop  (first lod)                        
                        (draw-drop  (rest lod)))]))   ; ListOfDrop
 
+;; Drop Image -> Image
+;; place drop on img as specified by d
+(check-expect (place-drop (make-drop 100 30) MTS) (place-image DROP-IMG
+                                                               100 30
+                                                               MTS))
+;(define (place-drop d img) MTS); stub
+
+(define (place-drop d img)
+  (place-image DROP-IMG
+               (drop-x d)(drop-y d)
+               img))
+
+
+;; DROP-IMG (drop-x (first lod))(drop-y (first lod))
 ;; ListOfDrop Integer Integer MouseEvent -> ListOfDrop
 ;; Creates a new drop at mouse (x,y) position and adds it to ListOfDrop
 (check-expect (mouse-handler empty 300 100 "button-down") (cons (make-drop 300 100) empty))
