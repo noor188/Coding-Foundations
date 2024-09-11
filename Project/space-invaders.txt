@@ -32,7 +32,8 @@
                                  (ellipse   10 30  "outline" "black")
                                  (ellipse   30 10  "solid"   "black"))))
 
-(define FIRE (ellipse 10 15 "solid" "red"))
+(define FIRE-Y 15)
+(define FIRE (ellipse 10 FIRE-Y "solid" "red"))
 
 
 
@@ -141,24 +142,58 @@
 
 ;; ListOfFire -> ListOfFire
 ;; Produce the next list fires (updates postion, remove excess fires)
-(check-expect (update-fire empty) empty)
 (check-expect (update-fire (cons (make-fire 0 0) empty)) (cons (make-fire (- 0 FIRE-SPEED) 0) empty))
+(check-expect (update-fire (cons (make-fire 0 (- 0 (/ FIRE-Y 2))) empty)) empty)
 (check-expect (update-fire (cons (make-fire (/ HEIGHT 2) (/ WIDTH 2)) (cons (make-fire 0 0) empty))) (cons (make-fire (- (/ HEIGHT 2) FIRE-SPEED) (/ WIDTH 2)) (cons (make-fire (- 0 FIRE-SPEED) 0) empty)))
+(check-expect (update-fire (cons (make-fire (/ HEIGHT 2) (/ WIDTH 2)) (cons (make-fire 0 (- 0 FIRE-Y)) empty))) (cons (make-fire (- (/ HEIGHT 2) FIRE-SPEED) (/ WIDTH 2)) empty))
 ;(define (update-fire lof) lof); stub
 
 (define (update-fire lof)
-  (onscreen-fire(update-x-fires lof)))  ; ListOfFire
+  (onscreen-fire(tick-fires lof)))  ; ListOfFire
 
 ;; ListOfFire -> ListOfFire
-;; Update fires in the list by subtracting fire-x by FIRE-SPEED
-;; !!!  but first add one test to update-fire where the fire passed the screen (should be removed) 
-(define (update-x-fires lof) lof); stub
+;; Update fires in the list by subtracting fire-y by FIRE-SPEED
+(check-expect (tick-fires empty) empty)
+(check-expect (tick-fires (cons (make-fire 0 0) empty)) (cons (make-fire 0 (- 0 FIRE-SPEED)) empty))
+(check-expect (tick-fires (cons (make-fire (/ HEIGHT 2) (/ WIDTH 2)) (cons (make-fire 0 0) empty))) (cons (make-fire (/ HEIGHT 2) (- (/ WIDTH 2) FIRE-SPEED)) (cons (make-fire 0 (- 0 FIRE-SPEED)) empty)))
+;(define (tick-fires lof) lof); stub
+
+(define (tick-fires lof)
+  (cond [(empty? lof) empty]
+        [ else
+          (cons (tick-fire(first lof))     ; Fire
+                (tick-fires (rest  lof)))]))  ; ListOfFire
+
+;; Fire -> Fire
+;; update fire Y position by subtracting FIRE-SPEED
+(check-expect (tick-fire (make-fire   0   0)) (make-fire   0 (-   0 FIRE-SPEED)))
+(check-expect (tick-fire (make-fire 120 300)) (make-fire 120 (- 300 FIRE-SPEED)))
+;(define (tick-fire f) f); stub
+
+(define (tick-fire f)
+  (make-fire (fire-x f) (- (fire-y f) FIRE-SPEED)))
+
 
 ;; ListOfFire -> ListOfFire
 ;; Remove excess fires from the list (passed the screen)
-;; !!!
-(define (onscreen-fire lof) lof); stub
+(check-expect (onscreen-fire empty) empty)
+(check-expect (onscreen-fire (cons (make-fire 0 0) empty))                  (cons (make-fire 0 0) empty))
+(check-expect (onscreen-fire (cons (make-fire 0 (- 0 (/ FIRE-Y 2))) empty)) empty)
+(check-expect (onscreen-fire (cons (make-fire (/ HEIGHT 2) 200) (cons (make-fire 0 0) empty))) (cons (make-fire (/ HEIGHT 2) 200) (cons (make-fire 0 0) empty)))
+(check-expect (onscreen-fire (cons (make-fire (/ HEIGHT 2) 200) (cons (make-fire 0 (- 0 (/ FIRE-Y 2))) empty))) (cons (make-fire (/ HEIGHT 2) 200) empty))
+;(define (onscreen-fire lof) lof); stub
 
+(define (onscreen-fire lof)
+  (cond [(empty? lof) empty]
+        [ else
+          (if  (onscreen-fire? (first lof))     
+               (cons (first lof) (onscreen-fire (rest  lof)))
+               (onscreen-fire (rest  lof)))])) 
+
+;; Fire -> Boolean
+;; True if fire within screen bounds (0-HEIGHT)
+;; !!!
+(define (onscreen-fire? f) true); stub
 #; 
 (define (update-fire lof)
   (cond [(empty? lof) empty]
