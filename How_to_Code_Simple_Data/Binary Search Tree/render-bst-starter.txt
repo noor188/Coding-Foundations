@@ -1,0 +1,113 @@
+(require 2htdp/image)
+
+;; render-bst-starter.rkt
+
+; 
+; Consider the following data definition for a binary search tree: 
+; 
+
+
+;; Constants:
+(define CIRCLE (circle 20 "outline" "blue"))
+(define TEXT-SIZE 10)
+(define TEXT-COLOR "Black")
+(define ARROW-L (line -30 20 "Black"))
+(define ARROW-R (line  30 20 "Black"))
+
+
+
+;; Data definitions:
+
+(define-struct node (key val l r))
+;; A BST (Binary Search Tree) is one of:
+;;  - false
+;;  - (make-node Integer String BST BST)
+;; interp. false means no BST, or empty BST
+;;         key is the node key
+;;         val is the node val
+;;         l and r are left and right subtrees
+;; INVARIANT: for a given node:
+;;     key is > all keys in its l(eft)  child
+;;     key is < all keys in its r(ight) child
+;;     the same key never appears twice in the tree
+; .
+
+(define BST0  false)
+(define BST1  (make-node 1 "abc" false false))
+(define BST4  (make-node 4 "dcj" false (make-node 7 "ruf" false false)))
+(define BST3  (make-node 3 "ilk" BST1 BST4))
+(define BST27 (make-node 27 "wit" (make-node 14 "olp" false false) false))
+(define BST42 
+  (make-node 42 "ily"
+             BST27
+             (make-node 50 "dug" false false)))
+(define BST10
+  (make-node 10 "why" BST3 BST42))
+#;
+(define (fn-for-bst t)
+  (cond [(false? t) (...)]
+        [else
+         (... (node-key t)    ;Integer
+              (node-val t)    ;String
+              (fn-for-bst (node-l t))
+              (fn-for-bst (node-r t)))]))
+
+;; Template rules used:
+;;  - one of: 2 cases
+;;  - atomic-distinct: false
+;;  - compound: (make-node Integer String BST BST)
+;;  - self reference: (node-l t) has type BST
+;;  - self reference: (node-r t) has type BST
+
+;; Functions:
+.
+
+
+; PROBLEM:
+; 
+; Design a function that consumes a bst and produces a SIMPLE 
+; rendering of that bst. Emphasis on SIMPLE. You might want to 
+; skip the lines for example.
+; 
+
+
+;; BST -> Image
+;; Produce a render of the BST
+(check-expect (render-bst BST0) empty-image); empty
+(check-expect (render-bst BST1) (overlay CIRCLE
+                                         (text "1:abc" TEXT-SIZE TEXT-COLOR))); 1
+(check-expect (render-bst BST27) (above/align "left"
+                                              (overlay CIRCLE
+                                                       (text "27:wit" TEXT-SIZE TEXT-COLOR))
+                                              ARROW-L
+                                              (overlay CIRCLE
+                                                       (text "14:olp" TEXT-SIZE TEXT-COLOR)))); 2 c l
+(check-expect (render-bst BST4) (above/align "left"
+                                              (overlay CIRCLE
+                                                       (text "4:dcj" TEXT-SIZE TEXT-COLOR))
+                                              ARROW-R
+                                              (overlay CIRCLE
+                                                       (text "7:ruf" TEXT-SIZE TEXT-COLOR)))); 2 c r
+; (check-expect (render-bst BST42) (above/align "left"
+;                                               (overlay CIRCLE
+;                                                        (text "42:ily" TEXT-SIZE TEXT-COLOR))
+;                                               (beside ARROW-L ARROW-R))); 2 c l r
+
+;(define (render-bst t) empty-image); stub
+
+(define (render-bst t)
+  (cond [(false? t) empty-image]
+        [else
+         (above (draw-node t)                
+                (render-bst (node-l t))
+                (render-bst (node-r t)))]))
+
+;; Integer String -> Image
+;; Draws a node : text (key:value) above a circle
+;; !!! (node-key t)(node-val t)   use (draw-arrows t) inside
+(define (draw-node key val) empty-image); stub
+
+;; BST -> Image
+;; draws left and right arrows of the node has lst, rst respectfully
+;; !!!
+(define (draw-arrows bst) empty-image)
