@@ -10,6 +10,7 @@
 ; 
 
 
+
 (define-struct account (num name))
 ;; Accounts is one of:
 ;;  - empty
