@@ -1,3 +1,6 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-beginner-reader.ss" "lang")((modname render-bst-starter) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
 (require 2htdp/image)
 
 ;; render-bst-starter.rkt
@@ -36,7 +39,6 @@
 (define BST1  (make-node 1 "abc" false false))
 (define BST4  (make-node 4 "dcj" false (make-node 7 "ruf" false false)))
 (define BST3  (make-node 3 "ilk" BST1 BST4))
-(define BST50 (make-node 50 "dug" false false))
 (define BST27 (make-node 27 "wit" (make-node 14 "olp" false false) false))
 (define BST42 
   (make-node 42 "ily"
@@ -84,11 +86,11 @@
                                               (overlay CIRCLE
                                                        (text "14:olp" TEXT-SIZE TEXT-COLOR)))); 2 c l
 (check-expect (render-bst BST4) (above/align "left"
-                                             (overlay CIRCLE
-                                                      (text "4:dcj" TEXT-SIZE TEXT-COLOR))
-                                             ARROW-R
-                                             (overlay CIRCLE
-                                                      (text "7:ruf" TEXT-SIZE TEXT-COLOR)))); 2 c r
+                                              (overlay CIRCLE
+                                                       (text "4:dcj" TEXT-SIZE TEXT-COLOR))
+                                              ARROW-R
+                                              (overlay CIRCLE
+                                                       (text "7:ruf" TEXT-SIZE TEXT-COLOR)))); 2 c r
 ; (check-expect (render-bst BST42) (above/align "left"
 ;                                               (overlay CIRCLE
 ;                                                        (text "42:ily" TEXT-SIZE TEXT-COLOR))
@@ -104,40 +106,9 @@
                 (render-bst (node-r t)))]))
 
 ;; Integer String -> Image
-;; Draws a node : text (key:value) above a circle and arrows if applicable
-(check-expect (draw-node (make-node 0 "abc" BST1 BST4))(above/align "center"
-                                                                    (overlay CIRCLE
-                                                                             (text "0:abc" TEXT-SIZE TEXT-COLOR))
-                                                                    (beside ARROW-L ARROW-R)))
-(check-expect (draw-node (make-node 1 "def" BST27 BST50)) (above/align "center"
-                                                                       (overlay CIRCLE
-                                                                                (text "1:def" TEXT-SIZE TEXT-COLOR))
-                                                                       (beside ARROW-L ARROW-R)))              
-
-;(define (draw-node t) empty-image); stub
-
-(define (draw-node t)
-  (draw-arrows(draw-circle t)))
-
-;; BST -> Image
 ;; Draws a node : text (key:value) above a circle
-(check-expect (draw-circle false) empty)
-(check-expect (draw-circle (make-node 0 "abc" BST1 BST4)) (overlay CIRCLE
-                                                                   (text "0:abc" TEXT-SIZE TEXT-COLOR)))
-(check-expect (draw-circle (make-node 1 "def" BST27 BST50)) (overlay CIRCLE
-                                                                     (text "1:def" TEXT-SIZE TEXT-COLOR)))
-;(define (draw-circle t) empty-image); stub
-
-(define (draw-circle t)
-  (cond [(false? t) empty]
-        [else
-         (overlay CIRCLE
-                  (text (get_string t) TEXT-SIZE TEXT-COLOR))]))
-
-;; BST -> String
-;; Produce "key:val" string for the provided node
-;; !!!   (string-append (int->string (node-key t)) ":" (node-val t) ) -------> (int->string (node-key t)) doesn't work !!!
-(define (get_string bst) "") ; stub
+;; !!! (node-key t)(node-val t)   use (draw-arrows t) inside
+(define (draw-node key val) empty-image); stub
 
 ;; BST -> Image
 ;; draws left and right arrows of the node has lst, rst respectfully
