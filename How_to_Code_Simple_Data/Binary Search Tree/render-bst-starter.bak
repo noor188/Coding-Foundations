@@ -1,3 +1,6 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-beginner-reader.ss" "lang")((modname render-bst-starter) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
 (require 2htdp/image)
 
 ;; render-bst-starter.rkt
@@ -13,7 +16,9 @@
 (define TEXT-COLOR "Black")
 (define ARROW-L (line -30 20 "Black"))
 (define ARROW-R (line  30 20 "Black"))
-
+(define HSPACE  (rectangle 1 15 "solid" "white"))
+(define VSPACE  (rectangle 15 5 "solid" "white"))
+(define MTTREE  (rectangle 20 10 "solid" "white"))
 
 
 ;; Data definitions:
@@ -60,9 +65,6 @@
 ;;  - self reference: (node-r t) has type BST
 
 ;; Functions:
-.
-
-
 ; PROBLEM:
 ; 
 ; Design a function that consumes a bst and produces a SIMPLE 
@@ -73,41 +75,69 @@
 
 ;; BST -> Image
 ;; Produce a render of the BST
-(check-expect (render-bst BST0) empty-image); empty
-(check-expect (render-bst BST1) (overlay CIRCLE
-                                         (text "1:abc" TEXT-SIZE TEXT-COLOR))); 1
-(check-expect (render-bst BST27) (above/align "left"
-                                              (overlay CIRCLE
-                                                       (text "27:wit" TEXT-SIZE TEXT-COLOR))
-                                              ARROW-L
-                                              (overlay CIRCLE
-                                                       (text "14:olp" TEXT-SIZE TEXT-COLOR)))); 2 c l
-(check-expect (render-bst BST4) (above/align "left"
-                                              (overlay CIRCLE
-                                                       (text "4:dcj" TEXT-SIZE TEXT-COLOR))
-                                              ARROW-R
-                                              (overlay CIRCLE
-                                                       (text "7:ruf" TEXT-SIZE TEXT-COLOR)))); 2 c r
-; (check-expect (render-bst BST42) (above/align "left"
-;                                               (overlay CIRCLE
-;                                                        (text "42:ily" TEXT-SIZE TEXT-COLOR))
-;                                               (beside ARROW-L ARROW-R))); 2 c l r
+(check-expect (render-bst BST0) MTTREE); false
+(check-expect (render-bst BST1)  (above (overlay CIRCLE
+                                                 (text "1:abc" TEXT-SIZE TEXT-COLOR))
+                                        VSPACE
+                                        (beside
+                                         (render-bst BST0)
+                                         HSPACE
+                                         (render-bst BST0)))); 1
+(check-expect (render-bst BST27) (above
+                                  (overlay CIRCLE
+                                           (text "27:wit" TEXT-SIZE TEXT-COLOR))
+                                  VSPACE
+                                  (beside
+                                   (above (overlay CIRCLE
+                                                   (text "14:olp" TEXT-SIZE TEXT-COLOR))
+                                          VSPACE
+                                          (beside
+                                           (render-bst BST0)
+                                           HSPACE
+                                           (render-bst BST0)))
+                                   HSPACE
+                                   (render-bst BST0))
+                                  )); 2 c l
+(check-expect (render-bst BST4) (above
+                                 (overlay CIRCLE
+                                          (text "4:dcj" TEXT-SIZE TEXT-COLOR))
+                                 VSPACE
+                                 (beside
+                                  (render-bst BST0)
+                                  HSPACE
+                                  (render-bst (make-node 7 "ruf" false false))))); 1 r
 
-;(define (render-bst t) empty-image); stub
+;(define (render-bst t) MTTREE); stub
 
 (define (render-bst t)
-  (cond [(false? t) empty-image]
+  (cond [(false? t) MTTREE]
         [else
-         (above (draw-node t)                
-                (render-bst (node-l t))
-                (render-bst (node-r t)))]))
+         (above (draw-node t)
+                VSPACE                
+                (beside
+                 (render-bst (node-l t))
+                 HSPACE
+                 (render-bst (node-r t))))]))
 
-;; Integer String -> Image
+;; Node -> Image
 ;; Draws a node : text (key:value) above a circle
-;; !!! (node-key t)(node-val t)   use (draw-arrows t) inside
-(define (draw-node key val) empty-image); stub
+(check-expect (draw-node (make-node 1 "abc" false false))(overlay CIRCLE
+                                                                  (text "1:abc" TEXT-SIZE TEXT-COLOR))) ; no children
+(check-expect (draw-node (make-node 3 "def"  BST1 BST4)) (overlay CIRCLE
+                                                                  (text "3:def" TEXT-SIZE TEXT-COLOR))) ; 2 children
 
-;; BST -> Image
-;; draws left and right arrows of the node has lst, rst respectfully
-;; !!!
-(define (draw-arrows bst) empty-image)
+(check-expect (draw-node (make-node 27 "wit" (make-node 14 "olp" false false) false))(overlay CIRCLE
+                                                                                              (text "27:wit" TEXT-SIZE TEXT-COLOR))
+              ) ; 1 child left
+(check-expect (draw-node (make-node 4 "dcj" false (make-node 7 "ruf" false false))) (overlay CIRCLE
+                                                                                             (text "4:dcj" TEXT-SIZE TEXT-COLOR))) ; 1 child right
+;; function composition : draw-circle, draw-arrows
+;; (node-key t)(node-val t)   use (draw-arrows t) inside
+;(define (draw-node t) MTTREE); stub
+
+(define (draw-node t)
+  (cond [(false? t) MTTREE]
+        [else
+         (overlay CIRCLE
+                  (text (string-append (number->string (node-key t)) ":" (node-val t) ) TEXT-SIZE TEXT-COLOR))]))
+

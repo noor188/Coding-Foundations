@@ -1,24 +1,29 @@
-;; The first three lines of this file were inserted by DrRacket. They record metadata
-;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-beginner-reader.ss" "lang")((modname render-bst-starter) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+
+;; render-bst-w-lines-starter.rkt
+
 (require 2htdp/image)
 
-;; render-bst-starter.rkt
-
+; PROBLEM:
 ; 
-; Consider the following data definition for a binary search tree: 
+; Given the following data definition for a binary search tree,
+; design a function that consumes a bst and produces a SIMPLE 
+; rendering of that bst including lines between nodes and their 
+; subnodes.
 ; 
+; To help you get started, we've added some sketches below of 
+; one way you could include lines to a bst.
 
 
-;; Constants:
-(define CIRCLE (circle 20 "outline" "blue"))
-(define TEXT-SIZE 10)
-(define TEXT-COLOR "Black")
-(define ARROW-L (line -30 20 "Black"))
-(define ARROW-R (line  30 20 "Black"))
-(define HSPACE  (rectangle 1 15 "solid" "white"))
-(define VSPACE  (rectangle 15 5 "solid" "white"))
-(define MTTREE  (rectangle 20 10 "solid" "white"))
+;; Constants
+
+(define TEXT-SIZE  14)
+(define TEXT-COLOR "BLACK")
+(define KEY-VAL-SEPARATOR ":")
+(define MTTREE (rectangle 20 1 "solid" "red"))
+(define NODE-WIDTH 70)
+(define NODE-HEIGHT 20)
+(define NODE (rectangle NODE-WIDTH NODE-HEIGHT "outline" "black"))
+(define EMPTY-NODE (rectangle NODE-WIDTH NODE-HEIGHT "outline" "purple"))
 
 
 ;; Data definitions:
@@ -35,19 +40,25 @@
 ;;     key is > all keys in its l(eft)  child
 ;;     key is < all keys in its r(ight) child
 ;;     the same key never appears twice in the tree
+
+
 ; .
 
-(define BST0  false)
-(define BST1  (make-node 1 "abc" false false))
-(define BST4  (make-node 4 "dcj" false (make-node 7 "ruf" false false)))
-(define BST3  (make-node 3 "ilk" BST1 BST4))
-(define BST27 (make-node 27 "wit" (make-node 14 "olp" false false) false))
+(define BST0 false)
+(define BST1 (make-node 1 "abc" false false))
+(define BST7 (make-node 7 "ruf" false false)) 
+(define BST4 (make-node 4 "dcj" false (make-node 7 "ruf" false false)))
+(define BST3 (make-node 3 "ilk" BST1 BST4))
+(define BST14 (make-node 14 "olp" false false))
+(define BST27  (make-node 27 "wit" (make-node 14 "olp" false false) false))
 (define BST42 
   (make-node 42 "ily"
              BST27
              (make-node 50 "dug" false false)))
 (define BST10
   (make-node 10 "why" BST3 BST42))
+(define BST100 
+  (make-node 100 "large" BST10 false))
 #;
 (define (fn-for-bst t)
   (cond [(false? t) (...)]
@@ -65,79 +76,62 @@
 ;;  - self reference: (node-r t) has type BST
 
 ;; Functions:
-; PROBLEM:
-; 
-; Design a function that consumes a bst and produces a SIMPLE 
-; rendering of that bst. Emphasis on SIMPLE. You might want to 
-; skip the lines for example.
-; 
 
-
+; 
+; Here is a sketch of one way the lines could work. What 
+; this sketch does is allows us to see the structure of
+; the functions pretty clearly. We'll have one helper for
+; the key value image, and one helper to draw the lines.
+; Each of those produces a rectangular image of course.
+; 
+; .
+; 
+; And here is a sketch of the helper that draws the lines:
+; .  
+; where lw means width of left subtree image and
+;       rw means width of right subtree image
+.
 ;; BST -> Image
-;; Produce a render of the BST
-(check-expect (render-bst BST0) MTTREE); false
-(check-expect (render-bst BST1)  (above (overlay CIRCLE
-                                                 (text "1:abc" TEXT-SIZE TEXT-COLOR))
-                                        VSPACE
-                                        (beside
-                                         (render-bst BST0)
-                                         HSPACE
-                                         (render-bst BST0)))); 1
-(check-expect (render-bst BST27) (above
-                                  (overlay CIRCLE
-                                           (text "27:wit" TEXT-SIZE TEXT-COLOR))
-                                  VSPACE
-                                  (beside
-                                   (above (overlay CIRCLE
-                                                   (text "14:olp" TEXT-SIZE TEXT-COLOR))
-                                          VSPACE
-                                          (beside
-                                           (render-bst BST0)
-                                           HSPACE
-                                           (render-bst BST0)))
-                                   HSPACE
-                                   (render-bst BST0))
-                                  )); 2 c l
-(check-expect (render-bst BST4) (above
-                                 (overlay CIRCLE
-                                          (text "4:dcj" TEXT-SIZE TEXT-COLOR))
-                                 VSPACE
-                                 (beside
-                                  (render-bst BST0)
-                                  HSPACE
-                                  (render-bst (make-node 7 "ruf" false false))))); 1 r
+;; Render an image of the input BST with lines between nodes and their subnodes
+(check-expect (render-bst false) MTTREE)
+(check-expect (render-bst BST1 ) (above (render-node 1 "abc") 
+                                        (lines (image-width (render-bst false))
+                                               (image-width (render-bst false)))
+                                        (beside (render-bst false)
+                                                (render-bst false))))
 
-;(define (render-bst t) MTTREE); stub
 
 (define (render-bst t)
   (cond [(false? t) MTTREE]
         [else
-         (above (draw-node t)
-                VSPACE
-                (beside
-                 (render-bst (node-l t))
-                 HSPACE
-                 (render-bst (node-r t))))]))
+         (above (overlay (render-node(node-key t)(node-val t))
+                         (lines (image-width (render-bst (node-l t)))
+                                (image-width (render-bst (node-r t))))
+                         (beside (render-bst (node-l t))
+                                 (render-bst (node-r t)))))])); stub
 
-;; Node -> Image
-;; Draws a node : text (key:value) above a circle
-(check-expect (draw-node (make-node 1 "abc" false false))(overlay CIRCLE
-                                                                  (text "1:abc" TEXT-SIZE TEXT-COLOR))) ; no children
-(check-expect (draw-node (make-node 3 "def"  BST1 BST4)) (overlay CIRCLE
-                                                                  (text "3:def" TEXT-SIZE TEXT-COLOR))) ; 2 children
+;; Integer String -> Image
+;; Produce a node, text on top of a node
+(check-expect (render-node 1 "abc") (overlay
+                                     (text (string-append "1" KEY-VAL-SEPARATOR "abc") TEXT-SIZE TEXT-COLOR)
+                                     NODE))
+;(define (render-node key val) MTTREE); stub
 
-(check-expect (draw-node (make-node 27 "wit" (make-node 14 "olp" false false) false))(overlay CIRCLE
-                                                                                              (text "27:wit" TEXT-SIZE TEXT-COLOR))
-              ) ; 1 child left
-(check-expect (draw-node (make-node 4 "dcj" false (make-node 7 "ruf" false false))) (overlay CIRCLE
-                                                                                             (text "4:dcj" TEXT-SIZE TEXT-COLOR))) ; 1 child right
-;; function composition : draw-circle, draw-arrows
-;; (node-key t)(node-val t)   use (draw-arrows t) inside
-;(define (draw-node t) MTTREE); stub
+(define (render-node key val)
+  (overlay
+   (text (string-append (number->string key) KEY-VAL-SEPARATOR "abc") TEXT-SIZE TEXT-COLOR)
+   NODE))
 
-(define (draw-node t)
-  (cond [(false? t) MTTREE]
-        [else
-         (overlay CIRCLE
-                  (text (string-append (number->string (node-key t)) ":" (node-val t) ) TEXT-SIZE TEXT-COLOR))]))
+;; Integer Integer -> Image
+;; Produce 2 lines for a node
+(check-expect (lines 100 100)(add-line (add-line (rectangle (+ 100 100) (/(+ 100 100) 4) "outline" "black")
+                                                 (/ (+ 100 100)2) 0 (/ 100 2) (/(+ 100 100) 4) "black"
+                                                 )
+                                       (/ (+ 100 100)2) 0  (+ 100 (/ 100 2)) (/(+ 100 100) 4) "black"))
+;(define (lines lw rw) MTTREE); stub
 
+(define (lines lw rw)
+  (add-line (add-line (rectangle (+ lw rw) (/(+ lw rw) 4) "outline" "black")
+                      (/ (+ rw lw)2) 0 (/ rw 2) (/(+ lw rw) 4) "black"
+                      )
+            (/ (+ rw lw)2) 0  (+ lw (/ rw 2)) (/(+ lw rw) 4) "black"))
